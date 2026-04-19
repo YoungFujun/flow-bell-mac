@@ -6,12 +6,13 @@ final class MicroBreakNoticeController {
     private let model = MicroBreakNoticeModel()
     private var panel: NSPanel?
 
-    func show(seconds: Double) {
+    func show(seconds: Double, accentColor: Color = .accentColor) {
         model.secondsRemaining = seconds
+        model.accentColor = accentColor
 
         if panel == nil {
             let panel = NSPanel(
-                contentRect: NSRect(x: 0, y: 0, width: 280, height: 90),
+                contentRect: NSRect(x: 0, y: 0, width: 180, height: 56),
                 styleMask: [.borderless, .nonactivatingPanel],
                 backing: .buffered,
                 defer: false
@@ -42,8 +43,8 @@ final class MicroBreakNoticeController {
         guard let screen = NSScreen.main ?? NSScreen.screens.first else { return }
         let frame = screen.visibleFrame
         let origin = NSPoint(
-            x: frame.midX - 140,
-            y: frame.maxY - 120
+            x: frame.midX - 90,
+            y: frame.maxY - 76
         )
         panel?.setFrameOrigin(origin)
     }
@@ -52,6 +53,7 @@ final class MicroBreakNoticeController {
 @MainActor
 final class MicroBreakNoticeModel: ObservableObject {
     @Published var secondsRemaining: Double = 0
+    @Published var accentColor: Color = .accentColor
 
     var countdownText: String {
         let s = max(0, Int(secondsRemaining.rounded(.up)))
@@ -63,29 +65,29 @@ private struct MicroBreakNoticeView: View {
     @ObservedObject var model: MicroBreakNoticeModel
 
     var body: some View {
-        HStack(spacing: 14) {
-            Image(systemName: "eye.slash.fill")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.white)
+        HStack(spacing: 12) {
+            Image(systemName: "eye")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(model.accentColor)
+                .frame(width: 20)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("闭眼微休息")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Color.white.opacity(0.72))
-                Text(model.countdownText + " 秒")
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(.white)
-            }
+            Text("闭眼休息 \(model.countdownText) 秒")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.primary)
 
-            Spacer()
+            Spacer(minLength: 0)
         }
-        .padding(.horizontal, 20)
-        .frame(width: 280, height: 90, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(width: 180, height: 56)
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.black.opacity(0.82))
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(NSColor.windowBackgroundColor))
+                .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 2)
         )
-        .padding(6)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.1), lineWidth: 0.5)
+        )
     }
 }

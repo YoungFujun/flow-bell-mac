@@ -129,32 +129,31 @@ struct ContentView: View {
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             Spacer()
-            Menu {
-                Button(FocusPresetChoice.flow.title) { applyPreset(.flow) }
-                Button(FocusPresetChoice.pomodoro.title) { applyPreset(.pomodoro) }
-                Button(FocusPresetChoice.deepwork.title) { applyPreset(.deepwork) }
-            } label: {
-                HStack(spacing: 8) {
-                    Text(presetDisplayTitle)
-                        .lineLimit(1)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(accent)
-                        .frame(width: 22, height: 22)
-                        .background(accent.opacity(0.18), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            Picker("", selection: presetBinding) {
+                ForEach(FocusPresetChoice.allCases) { preset in
+                    Text(preset.title).tag(preset)
                 }
-                .padding(.leading, 12)
-                .padding(.trailing, 6)
-                .padding(.vertical, 6)
-                .frame(width: 170)
-                .background(Color.primary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
-            .menuStyle(.borderlessButton)
-            .buttonStyle(.plain)
+            .tint(accent)
+            .frame(width: 170)
+            .onChange(of: preferences.settings.focusMinutes) { _ in applyPresetIfMatch() }
+            .onChange(of: preferences.settings.breakMinutes) { _ in applyPresetIfMatch() }
         }
+        .frame(height: 20)
         .padding(.horizontal, 20)
-        .padding(.vertical, 8)
+        .padding(.vertical, 11)
+    }
+
+    private var presetBinding: Binding<FocusPresetChoice> {
+        Binding(
+            get: { inferredPreset },
+            set: { applyPreset($0) }
+        )
+    }
+
+    private func applyPresetIfMatch() {
+        // 当时长设置改变时，自动更新预设显示（但不触发 applyPreset）
+        // Binding 的 get 会自动根据当前时长推断预设
     }
 
     // MARK: - Session card
@@ -271,7 +270,9 @@ struct ContentView: View {
                     .tint(accent)
                     .frame(width: 170)
                     .onChange(of: preferences.settings.soundName) { name in
-                        NSSound(named: NSSound.Name(name))?.play()
+                        let sound = NSSound(named: NSSound.Name(name))
+                        sound?.volume = 1.0
+                        sound?.play()
                     }
                 }
                 formDivider()
@@ -349,6 +350,7 @@ struct ContentView: View {
                         .foregroundStyle(.secondary)
                         .rotationEffect(.degrees(isExpanded.wrappedValue ? 90 : 0))
                 }
+                .frame(height: 20)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 11)
                 .contentShape(Rectangle())
@@ -531,19 +533,19 @@ struct ContentView: View {
     private var footerRow: some View {
         HStack {
             Text("Flow Bell")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
             Spacer()
             Button("退出") { NSApplication.shared.terminate(nil) }
                 .buttonStyle(.plain)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
                 .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 6))
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 14)
+        .padding(.vertical, 8)
     }
 
     // MARK: - Helpers
@@ -595,10 +597,6 @@ struct ContentView: View {
         case .custom:
             break
         }
-    }
-
-    private var presetDisplayTitle: String {
-        inferredPreset.title
     }
 
     private func smallActionButton(_ title: String, prominent: Bool = false, action: @escaping () -> Void) -> some View {

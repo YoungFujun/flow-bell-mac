@@ -8,6 +8,7 @@ private struct LegacyDayRecord: Codable, Identifiable {
     var id: TimeInterval { date.timeIntervalSince1970 }
 }
 
+@MainActor
 final class DailyStatsStore: ObservableObject {
     @Published private(set) var focusMinutesToday: Int = 0
     @Published private(set) var sessionsToday: Int = 0
@@ -18,14 +19,22 @@ final class DailyStatsStore: ObservableObject {
     private let dayKey = "stats.todayDate"
     private let legacyRecordsKey = "stats.weekRecords"
     private let calendar = Calendar.current
+    private var lastSyncedDay: Date?
 
     init() {
         migrateLegacyWeekRecordsIfNeeded()
         syncToday()
     }
 
+    func checkAndResetIfDayChanged() {
+        let today = calendar.startOfDay(for: Date())
+        if lastSyncedDay != today {
+            syncToday()
+        }
+    }
+
     func recordCompletedSession(focusMinutes: Double) {
-        syncToday()
+        checkAndResetIfDayChanged()
         focusMinutesToday += Int(focusMinutes.rounded())
         sessionsToday += 1
         save()
@@ -33,6 +42,7 @@ final class DailyStatsStore: ObservableObject {
 
     private func syncToday() {
         let today = calendar.startOfDay(for: Date())
+        lastSyncedDay = today
         if let storedDate = defaults.object(forKey: dayKey) as? Date,
            calendar.isDate(storedDate, inSameDayAs: today) {
             focusMinutesToday = defaults.integer(forKey: focusKey)

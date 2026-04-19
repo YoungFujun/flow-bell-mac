@@ -1,4 +1,5 @@
 import AppKit
+import AVFAudio
 import Foundation
 import UserNotifications
 
@@ -200,8 +201,8 @@ final class FocusEngine: ObservableObject {
         phaseEndDate = Date().addingTimeInterval(settings.breakDuration)
         secondsRemaining = settings.breakDuration
         notify(title: "Rest", body: "\(Int(settings.breakMinutes)) 分钟恢复休息开始。")
-        play(named: "Hero")
-        restOverlayController.show(secondsRemaining: secondsRemaining) { [weak self] in
+        play(named: "Hero", volumeGain: 2.0)
+        restOverlayController.show(secondsRemaining: secondsRemaining, accentColor: settings.accentColorChoice.color) { [weak self] in
             Task { @MainActor in
                 self?.finishRestSession()
             }
@@ -223,7 +224,7 @@ final class FocusEngine: ObservableObject {
             promptEndsAt = Date().addingTimeInterval(8)
             isMicroBreakPromptActive = false
             notify(title: "Ready", body: "休息结束，可以开始下一轮专注。")
-            play(named: "Glass")
+            play(named: "Glass", volumeGain: 2.0)
         }
     }
 
@@ -279,6 +280,7 @@ final class FocusEngine: ObservableObject {
     }
 
     private func startTicker() {
+        timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.tick()
@@ -289,6 +291,10 @@ final class FocusEngine: ObservableObject {
 
     private func tick() {
         let now = Date()
+
+        // Check if day has changed, reset daily stats if needed
+        dailyStats?.checkAndResetIfDayChanged()
+
         pruneTemporaryAllowances(at: now)
 
         if isMicroBreakPromptActive, let promptEndsAt {
@@ -333,9 +339,9 @@ final class FocusEngine: ObservableObject {
         activePromptText = "闭眼休息 \(Int(settings.microBreakSeconds)) 秒，然后继续。"
         promptEndsAt = Date().addingTimeInterval(settings.microBreakDuration)
         isMicroBreakPromptActive = true
-        play(named: settings.soundName)
+        play(named: settings.soundName, volumeGain: 2.0)
         notify(title: "随机提示音", body: "闭眼休息 \(Int(settings.microBreakSeconds)) 秒。")
-        microBreakNoticeController.show(seconds: settings.microBreakSeconds)
+        microBreakNoticeController.show(seconds: settings.microBreakSeconds, accentColor: settings.accentColorChoice.color)
     }
 
     private func handlePromptEnd(at now: Date) {
@@ -345,7 +351,7 @@ final class FocusEngine: ObservableObject {
             if settings.microBreakEndCueEnabled, phase == .focus {
                 activePromptText = "回到专注。"
                 promptEndsAt = now.addingTimeInterval(1.6)
-                play(named: "Glass", volume: 0.45)
+                play(named: "Glass", volumeGain: 1.0)
                 return
             }
         }
@@ -395,6 +401,20 @@ final class FocusEngine: ObservableObject {
         }
     }
 
+    private func stopApplicationObservers() {
+        let center = NSWorkspace.shared.notificationCenter
+        workspaceObservers.forEach { center.removeObserver($0) }
+        workspaceObservers.removeAll()
+    }
+
+    func cleanup() {
+        timer?.invalidate()
+        timer = nil
+        stopApplicationObservers()
+        audioPlayer?.stop()
+        audioPlayer = nil
+    }
+
     private func handleBlockedAppIfNeeded(runningApp app: NSRunningApplication?) {
         guard phase == .focus, isRunning else { return }
         guard let app else { return }
@@ -417,7 +437,7 @@ final class FocusEngine: ObservableObject {
 
         blockedNoticeLastShownAt[bundleID] = now
         let appName = app.localizedName ?? "该应用"
-        blockNoticeController.show(appName: appName) { [weak self] in
+        blockNoticeController.show(appName: appName, accentColor: settings.accentColorChoice.color) { [weak self] in
             Task { @MainActor in
                 self?.allowBlockedAppTemporarily(bundleID: bundleID)
             }
@@ -443,12 +463,36 @@ final class FocusEngine: ObservableObject {
         notificationCenter.add(request)
     }
 
-    private func play(named soundName: String, volume: Float = 1.0) {
-        guard let sound = NSSound(named: NSSound.Name(soundName)) else {
+    private var audioPlayer: AVAudioPlayer?
+
+    private func play(named soundName: String, volumeGain: Float = 1.0) {
+        // 停止之前的播放
+        audioPlayer?.stop()
+
+        // 系统声音路径
+        let soundPath = "/System/Library/Sounds/\(soundName).aiff"
+        let url = URL(fileURLWithPath: soundPath)
+
+        guard FileManager.default.fileExists(atPath: soundPath) else {
+            // 如果文件不存在，回退到 NSSound
+            let sound = NSSound(named: NSSound.Name(soundName))
+            sound?.volume = min(volumeGain, 1.0)
+            sound?.play()
             return
         }
-        sound.volume = volume
-        sound.play()
+
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.prepareToPlay()
+            // volumeGain > 1.0 时可以增强音量（但可能失真）
+            audioPlayer?.volume = min(volumeGain, 3.0)
+            audioPlayer?.play()
+        } catch {
+            // 回退到 NSSound
+            let sound = NSSound(named: NSSound.Name(soundName))
+            sound?.volume = min(volumeGain, 1.0)
+            sound?.play()
+        }
     }
 
     private func isBlockedAppTemporarilyAllowed(bundleID: String, now: Date) -> Bool {

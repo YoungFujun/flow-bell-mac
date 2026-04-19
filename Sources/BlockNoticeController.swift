@@ -7,9 +7,10 @@ final class BlockNoticeController {
     private var panel: NSPanel?
     private var dismissWorkItem: DispatchWorkItem?
 
-    func show(appName: String, onAllowTemporarily: (() -> Void)? = nil) {
-        model.message = "专注中，已隐藏 \(appName)"
+    func show(appName: String, accentColor: Color = .accentColor, onAllowTemporarily: (() -> Void)? = nil) {
+        model.appName = appName
         model.actionTitle = onAllowTemporarily == nil ? nil : "放行 5 分钟"
+        model.accentColor = accentColor
         model.action = { [weak self] in
             onAllowTemporarily?()
             self?.close()
@@ -17,7 +18,7 @@ final class BlockNoticeController {
 
         if panel == nil {
             let panel = NSPanel(
-                contentRect: NSRect(x: 0, y: 0, width: 300, height: 96),
+                contentRect: NSRect(x: 0, y: 0, width: 320, height: 60),
                 styleMask: [.borderless, .nonactivatingPanel],
                 backing: .buffered,
                 defer: false
@@ -35,8 +36,8 @@ final class BlockNoticeController {
         if let screen = NSScreen.main ?? NSScreen.screens.first {
             let frame = screen.visibleFrame
             let origin = NSPoint(
-                x: frame.midX - 150,
-                y: frame.maxY - 120
+                x: frame.midX - 160,
+                y: frame.maxY - 80
             )
             panel?.setFrameOrigin(origin)
         }
@@ -48,20 +49,22 @@ final class BlockNoticeController {
             self?.panel?.orderOut(nil)
         }
         dismissWorkItem = workItem
-        let dismissDelay = onAllowTemporarily == nil ? 1.1 : 3.0
+        let dismissDelay = onAllowTemporarily == nil ? 1.5 : 4.0
         DispatchQueue.main.asyncAfter(deadline: .now() + dismissDelay, execute: workItem)
     }
 
     func close() {
         dismissWorkItem?.cancel()
         panel?.orderOut(nil)
+        model.action = nil
     }
 }
 
 @MainActor
 final class BlockNoticeModel: ObservableObject {
-    @Published var message = ""
+    @Published var appName = ""
     @Published var actionTitle: String?
+    @Published var accentColor: Color = .accentColor
     var action: (() -> Void)?
 }
 
@@ -69,43 +72,44 @@ private struct BlockNoticeView: View {
     @ObservedObject var model: BlockNoticeModel
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "moon.zzz.fill")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.white)
-                .padding(.top, 2)
+        HStack(spacing: 12) {
+            Image(systemName: "app.badge.fill")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(model.accentColor)
+                .frame(width: 20)
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text(model.message)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.white)
-                    .lineLimit(2)
-
-                if let actionTitle = model.actionTitle {
-                    Button(actionTitle) {
-                        model.action?()
-                    }
-                    .buttonStyle(.plain)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.black)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(Color.white)
-                    )
-                }
-            }
+            Text("已拦截 \(model.appName)")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.primary)
 
             Spacer(minLength: 0)
+
+            if let actionTitle = model.actionTitle {
+                Button(actionTitle) {
+                    model.action?()
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(model.accentColor)
+                )
+            }
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
-        .frame(width: 300, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(width: 320, height: 60)
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.black.opacity(0.82))
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(NSColor.windowBackgroundColor))
+                .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 2)
         )
-        .padding(6)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.1), lineWidth: 0.5)
+        )
     }
 }

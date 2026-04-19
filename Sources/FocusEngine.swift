@@ -25,6 +25,7 @@ final class FocusEngine: ObservableObject {
     @Published private(set) var promptEndsAt: Date?
     @Published private(set) var completedFocusSessions = 0
     @Published private(set) var pingCount = 0
+    @Published private(set) var temporarilyAllowedBundleIDs: Set<String> = []
 
     var dailyStats: DailyStatsStore?
 
@@ -41,6 +42,10 @@ final class FocusEngine: ObservableObject {
     private let restOverlayController = RestOverlayController()
     private let blockNoticeController = BlockNoticeController()
     private let microBreakNoticeController = MicroBreakNoticeController()
+    private var temporarilyAllowedUntil: [String: Date] = [:]
+    private var blockedNoticeLastShownAt: [String: Date] = [:]
+    private let temporaryAllowDuration: TimeInterval = 5 * 60
+    private let blockedNoticeCooldown: TimeInterval = 4
 
     init() {
         requestNotificationPermission()
@@ -160,7 +165,21 @@ final class FocusEngine: ObservableObject {
         reset()
     }
 
+    func allowBlockedAppTemporarily(bundleID: String) {
+        let until = Date().addingTimeInterval(temporaryAllowDuration)
+        temporarilyAllowedUntil[bundleID] = until
+        temporarilyAllowedBundleIDs.insert(bundleID)
+        blockedNoticeLastShownAt.removeValue(forKey: bundleID)
+        blockNoticeController.close()
+    }
+
+    func revokeTemporaryAllowance(bundleID: String) {
+        temporarilyAllowedUntil.removeValue(forKey: bundleID)
+        temporarilyAllowedBundleIDs.remove(bundleID)
+    }
+
     private func startFocusSession() {
+        clearTemporaryAllowances()
         phase = .focus
         isRunning = true
         activePromptText = nil
@@ -238,6 +257,7 @@ final class FocusEngine: ObservableObject {
     private func reset() {
         restOverlayController.close()
         microBreakNoticeController.close()
+        clearTemporaryAllowances()
         phase = .idle
         isRunning = false
         secondsRemaining = 0
@@ -251,6 +271,13 @@ final class FocusEngine: ObservableObject {
         pingCount = 0
     }
 
+    private func clearTemporaryAllowances() {
+        temporarilyAllowedUntil.removeAll()
+        temporarilyAllowedBundleIDs.removeAll()
+        blockedNoticeLastShownAt.removeAll()
+        blockNoticeController.close()
+    }
+
     private func startTicker() {
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
@@ -262,6 +289,7 @@ final class FocusEngine: ObservableObject {
 
     private func tick() {
         let now = Date()
+        pruneTemporaryAllowances(at: now)
 
         if isMicroBreakPromptActive, let promptEndsAt {
             let remaining = max(0, promptEndsAt.timeIntervalSince(now))
@@ -370,15 +398,30 @@ final class FocusEngine: ObservableObject {
     private func handleBlockedAppIfNeeded(runningApp app: NSRunningApplication?) {
         guard phase == .focus, isRunning else { return }
         guard let app else { return }
+        let now = Date()
         guard let bundleID = app.bundleIdentifier, bundleID != Bundle.main.bundleIdentifier else {
             return
         }
         guard settings.blockedApps.contains(where: { $0.bundleIdentifier == bundleID }) else {
             return
         }
+        guard !isBlockedAppTemporarilyAllowed(bundleID: bundleID, now: now) else {
+            return
+        }
 
         app.hide()
-        blockNoticeController.show(appName: app.localizedName ?? "该应用")
+        if let lastShownAt = blockedNoticeLastShownAt[bundleID],
+           now.timeIntervalSince(lastShownAt) < blockedNoticeCooldown {
+            return
+        }
+
+        blockedNoticeLastShownAt[bundleID] = now
+        let appName = app.localizedName ?? "该应用"
+        blockNoticeController.show(appName: appName) { [weak self] in
+            Task { @MainActor in
+                self?.allowBlockedAppTemporarily(bundleID: bundleID)
+            }
+        }
     }
 
     private func enforceBlockedFrontmostAppIfNeeded() {
@@ -408,8 +451,26 @@ final class FocusEngine: ObservableObject {
         sound.play()
     }
 
+    private func isBlockedAppTemporarilyAllowed(bundleID: String, now: Date) -> Bool {
+        guard let until = temporarilyAllowedUntil[bundleID] else {
+            return false
+        }
+        return until > now
+    }
+
+    private func pruneTemporaryAllowances(at now: Date) {
+        let active = temporarilyAllowedUntil.filter { $0.value > now }
+        if active.count != temporarilyAllowedUntil.count {
+            temporarilyAllowedUntil = active
+            temporarilyAllowedBundleIDs = Set(active.keys)
+        }
+    }
+
     func timeLabel() -> String {
-        shortTime(secondsRemaining)
+        if phase == .idle {
+            return shortTime(settings.focusDuration)
+        }
+        return shortTime(secondsRemaining)
     }
 
     private var microBreakCountdownTitle: String {

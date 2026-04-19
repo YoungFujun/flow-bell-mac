@@ -58,6 +58,24 @@ enum MenuBarDisplayStyle: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+enum FocusPresetChoice: String, Codable, CaseIterable, Identifiable {
+    case custom
+    case flow
+    case pomodoro
+    case deepwork
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .custom: "手动设置"
+        case .flow: "Flow 90/20"
+        case .pomodoro: "Pomodoro 30/5"
+        case .deepwork: "Focus 50/10"
+        }
+    }
+}
+
 struct AppSettings: Codable, Equatable {
     var focusMinutes: Double = 90
     var breakMinutes: Double = 20
@@ -91,12 +109,14 @@ final class PreferencesStore: ObservableObject {
     private let defaults = UserDefaults.standard
 
     init() {
+        let loadedSettings: AppSettings
         if let data = defaults.data(forKey: defaultsKey),
            let decoded = try? JSONDecoder().decode(AppSettings.self, from: data) {
-            settings = decoded
+            loadedSettings = decoded
         } else {
-            settings = .defaultValue
+            loadedSettings = .defaultValue
         }
+        settings = loadedSettings
     }
 
     private func save() {
@@ -105,4 +125,5 @@ final class PreferencesStore: ObservableObject {
         }
         defaults.set(data, forKey: defaultsKey)
     }
+
 }

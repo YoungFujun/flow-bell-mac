@@ -72,17 +72,14 @@ private struct MenuBarLabelView: View {
 }
 
 private enum MenuBarAppearance {
-    static var isDark: Bool {
-        NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-    }
-    static var labelColor: NSColor { isDark ? .white : .black }
-    static var secondaryAlpha: CGFloat { isDark ? 0.5 : 0.4 }
-    static var trackAlpha: CGFloat { isDark ? 0.3 : 0.18 }
+    static let baseColor = NSColor.black
+    static let secondaryAlpha: CGFloat = 0.4
+    static let trackAlpha: CGFloat = 0.18
 }
 
 private enum ClockBoxImage {
     static func make(text: String) -> NSImage {
-        let fg = MenuBarAppearance.labelColor
+        let fg = MenuBarAppearance.baseColor
         let font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
         let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: fg]
         let str = NSAttributedString(string: text, attributes: attrs)
@@ -101,14 +98,14 @@ private enum ClockBoxImage {
 
         str.draw(at: NSPoint(x: hPad, y: vPad))
         image.unlockFocus()
-        image.isTemplate = false
+        image.isTemplate = true
         return image
     }
 }
 
 private enum StatusRingImage {
     static func make(phase: FocusEngine.Phase, isRunning: Bool, progress: Double) -> NSImage {
-        let fg = MenuBarAppearance.labelColor
+        let fg = MenuBarAppearance.baseColor
         let size = NSSize(width: 22, height: 22)
         let image = NSImage(size: size)
         image.lockFocus()
@@ -138,7 +135,7 @@ private enum StatusRingImage {
         arc.stroke()
 
         image.unlockFocus()
-        image.isTemplate = false
+        image.isTemplate = true
         return image
     }
 }

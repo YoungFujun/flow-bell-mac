@@ -45,10 +45,9 @@
 - **数字时钟** — 带边框的倒计时；空闲时显示设定的专注时长（如 `90:00`）
 - **圆环盈缺** — 弧形进度随专注推进逐渐填满
 
-### 每日与每周统计
+### 今日统计
 - 主界面显示今日专注时长与完成轮次
-- 设置页内置「本周统计」入口，7 天柱状图展示历史数据
-- 数据按日重置，保留最近 7 天历史
+- 数据按日重置，仅保留当天统计
 
 ---
 
@@ -88,7 +87,7 @@ cd flow-bell-mac
 | 微休息结束提示音 | 开启 | — |
 | 休息结束自动开始下一轮 | 关闭 | — |
 
-内置预设：**Flow 90/20**、**Pomodoro 25/5**、**Deep Work 52/17**
+内置预设：**Pomodoro 30/5**、**Focus 50/10**、**Flow 90/20**
 
 ---
 
@@ -98,7 +97,7 @@ cd flow-bell-mac
 - **Swift Package Manager** — 无需 Xcode 工程文件
 - **UserNotifications** — 系统通知集成
 - **NSSound** — 仅使用系统内置音效，无需额外音频资源
-- **UserDefaults** — 设置与统计数据的轻量持久化
+- **UserDefaults** — 设置与今日专注数据的轻量持久化
 
 要求 macOS 13 Ventura 及以上。
 
@@ -112,7 +111,7 @@ Sources/
   ContentView.swift                主面板 UI
   FocusEngine.swift                状态机、计时器、Ping 调度
   Preferences.swift                设置模型与持久化
-  DailyStats.swift                 每日/每周统计存储
+  DailyStats.swift                 今日专注统计存储
   RestOverlayController.swift      休息置顶浮窗
   BlockNoticeController.swift      App 拦截通知
   MicroBreakNoticeController.swift 微休息倒计时通知

@@ -1,6 +1,6 @@
 import Foundation
 
-struct DayRecord: Codable, Identifiable {
+private struct LegacyDayRecord: Codable, Identifiable {
     var date: Date
     var focusMinutes: Int
     var sessions: Int
@@ -11,65 +11,59 @@ struct DayRecord: Codable, Identifiable {
 final class DailyStatsStore: ObservableObject {
     @Published private(set) var focusMinutesToday: Int = 0
     @Published private(set) var sessionsToday: Int = 0
-    @Published private(set) var weekRecords: [DayRecord] = []
 
     private let defaults = UserDefaults.standard
-    private let recordsKey = "stats.weekRecords"
+    private let focusKey = "stats.todayFocusMinutes"
+    private let sessionsKey = "stats.todaySessions"
+    private let dayKey = "stats.todayDate"
+    private let legacyRecordsKey = "stats.weekRecords"
     private let calendar = Calendar.current
 
     init() {
-        load()
-        pruneOldRecords()
+        migrateLegacyWeekRecordsIfNeeded()
         syncToday()
     }
 
     func recordCompletedSession(focusMinutes: Double) {
-        let today = calendar.startOfDay(for: Date())
-        if let idx = weekRecords.firstIndex(where: { calendar.isDate($0.date, inSameDayAs: today) }) {
-            weekRecords[idx].focusMinutes += Int(focusMinutes.rounded())
-            weekRecords[idx].sessions += 1
-        } else {
-            weekRecords.append(DayRecord(date: today, focusMinutes: Int(focusMinutes.rounded()), sessions: 1))
-        }
-        save()
         syncToday()
-    }
-
-    var weekTotalMinutes: Int { weekRecords.reduce(0) { $0 + $1.focusMinutes } }
-    var weekTotalSessions: Int { weekRecords.reduce(0) { $0 + $1.sessions } }
-
-    var sortedWeekRecords: [DayRecord] {
-        weekRecords.sorted { $0.date > $1.date }
+        focusMinutesToday += Int(focusMinutes.rounded())
+        sessionsToday += 1
+        save()
     }
 
     private func syncToday() {
         let today = calendar.startOfDay(for: Date())
-        if let rec = weekRecords.first(where: { calendar.isDate($0.date, inSameDayAs: today) }) {
-            focusMinutesToday = rec.focusMinutes
-            sessionsToday = rec.sessions
+        if let storedDate = defaults.object(forKey: dayKey) as? Date,
+           calendar.isDate(storedDate, inSameDayAs: today) {
+            focusMinutesToday = defaults.integer(forKey: focusKey)
+            sessionsToday = defaults.integer(forKey: sessionsKey)
         } else {
             focusMinutesToday = 0
             sessionsToday = 0
+            save(for: today)
         }
     }
 
-    private func pruneOldRecords() {
-        let cutoff = calendar.date(byAdding: .day, value: -7, to: calendar.startOfDay(for: Date()))!
-        weekRecords = weekRecords.filter { $0.date >= cutoff }
-        save()
-    }
-
-    private func load() {
-        guard let data = defaults.data(forKey: recordsKey),
-              let decoded = try? JSONDecoder().decode([DayRecord].self, from: data) else {
-            weekRecords = []
+    private func migrateLegacyWeekRecordsIfNeeded() {
+        guard defaults.object(forKey: dayKey) == nil,
+              let data = defaults.data(forKey: legacyRecordsKey),
+              let decoded = try? JSONDecoder().decode([LegacyDayRecord].self, from: data) else {
             return
         }
-        weekRecords = decoded
+
+        let today = calendar.startOfDay(for: Date())
+        if let todayRecord = decoded.first(where: { calendar.isDate($0.date, inSameDayAs: today) }) {
+            focusMinutesToday = todayRecord.focusMinutes
+            sessionsToday = todayRecord.sessions
+        }
+
+        defaults.removeObject(forKey: legacyRecordsKey)
+        save(for: today)
     }
 
-    private func save() {
-        guard let data = try? JSONEncoder().encode(weekRecords) else { return }
-        defaults.set(data, forKey: recordsKey)
+    private func save(for day: Date = Calendar.current.startOfDay(for: Date())) {
+        defaults.set(focusMinutesToday, forKey: focusKey)
+        defaults.set(sessionsToday, forKey: sessionsKey)
+        defaults.set(day, forKey: dayKey)
     }
 }

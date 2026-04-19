@@ -2,6 +2,12 @@ import AppKit
 import SwiftUI
 
 struct ContentView: View {
+    private enum ScrollTarget: Hashable {
+        case durationSection
+        case soundSection
+        case blockedAppsSection
+    }
+
     @EnvironmentObject private var preferences: PreferencesStore
     @EnvironmentObject private var engine: FocusEngine
     @EnvironmentObject private var installedApps: InstalledAppsStore
@@ -10,32 +16,50 @@ struct ContentView: View {
 
     @State private var durationExpanded = false
     @State private var soundExpanded = false
-    @State private var showingBlockedApps = false
+    @State private var blockedAppsExpanded = false
+    @State private var pendingScrollTarget: ScrollTarget?
 
     private var accent: Color { preferences.settings.accentColorChoice.color }
+    private let panelHeight: CGFloat = 500
 
     var body: some View {
-        Group {
-            if showingBlockedApps {
-                blockedAppsPage
-                    .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .trailing)))
-            } else {
-                VStack(spacing: 0) {
-                    headerCard
-                    menuBarPickerRow
-                    Divider()
-                    sessionCard
-                    Divider()
-                    settingsForm
-                    Divider()
-                    footerRow
+        VStack(spacing: 0) {
+            ScrollViewReader { proxy in
+                ScrollView(.vertical, showsIndicators: false) {
+                    homeContent
+                        .frame(maxWidth: .infinity, alignment: .top)
                 }
-                .transition(.asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .leading)))
+                .onChange(of: pendingScrollTarget) { target in
+                    guard let target else { return }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            proxy.scrollTo(target, anchor: .center)
+                        }
+                        pendingScrollTarget = nil
+                    }
+                }
             }
+            Divider()
+            footerRow
         }
+        .frame(maxWidth: .infinity, alignment: .top)
+        .frame(height: panelHeight, alignment: .top)
         .background(Color(NSColor.windowBackgroundColor))
-        .fixedSize(horizontal: false, vertical: true)
-        .animation(.easeInOut(duration: 0.25), value: showingBlockedApps)
+    }
+
+    private var homeContent: some View {
+        VStack(spacing: 0) {
+            headerCard
+            menuBarPickerRow
+            Divider()
+            sessionCard
+            Divider()
+            presetRow
+            Divider()
+            durationSection
+            Divider()
+            settingsForm
+        }
     }
 
     // MARK: - Header
@@ -47,7 +71,7 @@ struct ContentView: View {
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
                     .tracking(0.5)
-                Text(engine.timeLabel())
+                Text(headerTimeLabel)
                     .font(.system(size: 44, weight: .semibold, design: .rounded))
                     .monospacedDigit()
             }
@@ -92,7 +116,42 @@ struct ContentView: View {
                 }
             }
             .pickerStyle(.segmented)
+            .tint(accent)
             .frame(width: 150)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 8)
+    }
+
+    private var presetRow: some View {
+        HStack {
+            Text("预设")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+            Spacer()
+            Menu {
+                Button(FocusPresetChoice.flow.title) { applyPreset(.flow) }
+                Button(FocusPresetChoice.pomodoro.title) { applyPreset(.pomodoro) }
+                Button(FocusPresetChoice.deepwork.title) { applyPreset(.deepwork) }
+            } label: {
+                HStack(spacing: 8) {
+                    Text(presetDisplayTitle)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(accent)
+                        .frame(width: 22, height: 22)
+                        .background(accent.opacity(0.18), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+                .padding(.leading, 12)
+                .padding(.trailing, 6)
+                .padding(.vertical, 6)
+                .frame(width: 170)
+                .background(Color.primary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            .menuStyle(.borderlessButton)
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
@@ -141,10 +200,8 @@ struct ContentView: View {
 
     private var statsRow: some View {
         HStack(spacing: 10) {
-            statPill(title: "本轮提示", value: "\(engine.pingCount)")
             statPill(title: "完成轮次", value: "\(engine.completedFocusSessions)")
             statPill(title: "今日专注", value: todayFocusLabel)
-            statPill(title: "今日番茄", value: "\(dailyStats.sessionsToday)")
         }
     }
 
@@ -174,33 +231,36 @@ struct ContentView: View {
 
     // MARK: - Settings form (collapsible)
 
+    private var durationSection: some View {
+        collapsibleSection(
+            title: "时长",
+            icon: "timer",
+            isExpanded: $durationExpanded,
+            scrollSectionID: .durationSection,
+            onToggle: handleSectionToggle
+        ) {
+            formStepperRow("专注时长", value: focusBinding, range: 15...180, step: 5, suffix: "分钟")
+            formDivider()
+            formStepperRow("休息时长", value: breakBinding, range: 5...60, step: 5, suffix: "分钟")
+            formDivider()
+            formStepperRow("随机最短", value: pingMinBinding, range: 1...15, step: 1, suffix: "分钟")
+            formDivider()
+            formStepperRow("随机最长", value: pingMaxBinding, range: 1...20, step: 1, suffix: "分钟")
+            formDivider()
+            formStepperRow("微休息", value: microBreakBinding, range: 5...30, step: 1, suffix: "秒")
+        }
+        .font(.system(size: 13))
+    }
+
     private var settingsForm: some View {
         VStack(spacing: 0) {
-            collapsibleSection(title: "时长", icon: "timer", isExpanded: $durationExpanded) {
-                formRow("预设") {
-                    Picker("", selection: presetBinding) {
-                        Text("自定义").tag("custom")
-                        Text("Flow 90/20").tag("flow")
-                        Text("Pomodoro 25/5").tag("pomodoro")
-                        Text("Deep Work 52/17").tag("deepwork")
-                    }
-                    .frame(width: 170)
-                }
-                formDivider()
-                formStepperRow("专注时长", value: focusBinding, range: 15...180, step: 5, suffix: "分钟")
-                formDivider()
-                formStepperRow("休息时长", value: breakBinding, range: 5...60, step: 5, suffix: "分钟")
-                formDivider()
-                formStepperRow("随机最短", value: pingMinBinding, range: 1...15, step: 0.5, suffix: "分钟")
-                formDivider()
-                formStepperRow("随机最长", value: pingMaxBinding, range: 1...20, step: 0.5, suffix: "分钟")
-                formDivider()
-                formStepperRow("微休息", value: microBreakBinding, range: 5...30, step: 1, suffix: "秒")
-            }
-
-            Divider()
-
-            collapsibleSection(title: "声音与行为", icon: "bell", isExpanded: $soundExpanded) {
+            collapsibleSection(
+                title: "声音与行为",
+                icon: "bell",
+                isExpanded: $soundExpanded,
+                scrollSectionID: .soundSection,
+                onToggle: handleSectionToggle
+            ) {
                 formRow("提示音") {
                     Picker("", selection: soundBinding) {
                         Text("Glass").tag("Glass")
@@ -208,6 +268,7 @@ struct ContentView: View {
                         Text("Submarine").tag("Submarine")
                         Text("Funk").tag("Funk")
                     }
+                    .tint(accent)
                     .frame(width: 170)
                     .onChange(of: preferences.settings.soundName) { name in
                         NSSound(named: NSSound.Name(name))?.play()
@@ -240,28 +301,16 @@ struct ContentView: View {
 
             Divider()
 
-            Button(action: { withAnimation(.easeInOut(duration: 0.25)) { showingBlockedApps = true } }) {
-                HStack(spacing: 8) {
-                    Image(systemName: "apps.iphone.badge.plus")
-                        .foregroundStyle(.secondary)
-                        .frame(width: 16)
-                    Text("专注禁用 App")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Color(NSColor.labelColor))
-                    Spacer()
-                    let count = preferences.settings.blockedApps.count
-                    Text(count == 0 ? "未设置" : "\(count) 个")
-                        .foregroundStyle(.secondary)
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 11)
-                .contentShape(Rectangle())
+            collapsibleSection(
+                title: "专注禁用 App",
+                icon: "apps.iphone.badge.plus",
+                subtitle: preferences.settings.blockedApps.isEmpty ? "未设置" : "\(preferences.settings.blockedApps.count) 个",
+                isExpanded: $blockedAppsExpanded,
+                scrollSectionID: .blockedAppsSection,
+                onToggle: handleSectionToggle
+            ) {
+                blockedAppsContent
             }
-            .buttonStyle(.plain)
-
         }
         .font(.system(size: 13))
     }
@@ -271,10 +320,18 @@ struct ContentView: View {
         icon: String,
         subtitle: String? = nil,
         isExpanded: Binding<Bool>,
+        scrollSectionID: ScrollTarget? = nil,
+        onToggle: ((Bool, ScrollTarget?) -> Void)? = nil,
         @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(spacing: 0) {
-            Button(action: { withAnimation(.easeInOut(duration: 0.2)) { isExpanded.wrappedValue.toggle() } }) {
+            Button(action: {
+                let nextValue = !isExpanded.wrappedValue
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isExpanded.wrappedValue = nextValue
+                }
+                onToggle?(nextValue, scrollSectionID)
+            }) {
                 HStack(spacing: 8) {
                     Image(systemName: icon)
                         .foregroundStyle(.secondary)
@@ -305,6 +362,7 @@ struct ContentView: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
+        .id(scrollSectionID)
     }
 
     private func formRow<C: View>(_ label: String, @ViewBuilder control: () -> C) -> some View {
@@ -329,16 +387,23 @@ struct ContentView: View {
             Text(label)
             Spacer()
             HStack(spacing: 6) {
-                Text(step < 1
-                     ? String(format: "%.1f", value.wrappedValue)
-                     : "\(Int(value.wrappedValue))")
-                    .monospacedDigit()
-                    .frame(width: 36, alignment: .trailing)
-                Text(suffix)
+                TextField(
+                    "",
+                    value: value,
+                    formatter: stepperNumberFormatter(step: step)
+                )
+                .textFieldStyle(.roundedBorder)
+                .multilineTextAlignment(.trailing)
+                .frame(width: step < 1 ? 48 : 44)
+                .onSubmit {
+                    value.wrappedValue = min(max(value.wrappedValue, range.lowerBound), range.upperBound)
+                }
+                Text(suffix.count == 1 ? " \(suffix)" : suffix)
                     .foregroundStyle(.secondary)
-                    .fixedSize()
+                    .frame(width: 32, alignment: .leading)
                 Stepper("", value: value, in: range, step: step)
                     .labelsHidden()
+                    .tint(accent)
             }
         }
         .padding(.horizontal, 20)
@@ -353,6 +418,7 @@ struct ContentView: View {
             Toggle("", isOn: isOn)
                 .labelsHidden()
                 .toggleStyle(.switch)
+                .tint(accent)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
@@ -361,39 +427,6 @@ struct ContentView: View {
 
     private func formDivider() -> some View {
         Divider().padding(.leading, 20)
-    }
-
-    // MARK: - Blocked apps
-
-    private var blockedAppsPage: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Button(action: { withAnimation(.easeInOut(duration: 0.25)) { showingBlockedApps = false } }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 13, weight: .semibold))
-                        Text("返回")
-                            .font(.system(size: 13))
-                    }
-                    .foregroundStyle(accent)
-                }
-                .buttonStyle(.plain)
-                Spacer()
-                Text("专注禁用 App")
-                    .font(.system(size: 13, weight: .semibold))
-                Spacer()
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 13, weight: .semibold))
-                    Text("返回").font(.system(size: 13))
-                }
-                .opacity(0)
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            Divider()
-            blockedAppsContent
-        }
     }
 
     private var blockedAppsContent: some View {
@@ -462,11 +495,25 @@ struct ContentView: View {
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Button("移除") {
-                                preferences.settings.blockedApps.removeAll { $0.bundleIdentifier == app.bundleIdentifier }
+                            HStack(spacing: 12) {
+                                if engine.temporarilyAllowedBundleIDs.contains(app.bundleIdentifier) {
+                                    Text("已放行")
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundStyle(accent)
+                                    smallActionButton("取消") {
+                                        engine.revokeTemporaryAllowance(bundleID: app.bundleIdentifier)
+                                    }
+                                } else {
+                                    smallActionButton("放行 5 分", prominent: true) {
+                                        engine.allowBlockedAppTemporarily(bundleID: app.bundleIdentifier)
+                                    }
+                                }
+
+                                smallActionButton("移除") {
+                                    engine.revokeTemporaryAllowance(bundleID: app.bundleIdentifier)
+                                    preferences.settings.blockedApps.removeAll { $0.bundleIdentifier == app.bundleIdentifier }
+                                }
                             }
-                            .buttonStyle(.borderless)
-                            .foregroundStyle(.secondary)
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 8)
@@ -476,6 +523,7 @@ struct ContentView: View {
                 }
             }
         }
+        .background(Color.primary.opacity(0.03))
     }
 
     // MARK: - Footer
@@ -483,24 +531,88 @@ struct ContentView: View {
     private var footerRow: some View {
         HStack {
             Text("Flow Bell")
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.secondary)
             Spacer()
             Button("退出") { NSApplication.shared.terminate(nil) }
                 .buttonStyle(.plain)
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
                 .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 6))
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 10)
+        .padding(.vertical, 14)
     }
 
     // MARK: - Helpers
 
+    private func handleSectionToggle(_ isExpanded: Bool, _ scrollTarget: ScrollTarget?) {
+        guard isExpanded else { return }
+        pendingScrollTarget = scrollTarget
+    }
 
+    private var headerTimeLabel: String {
+        if engine.phase == .idle {
+            return shortTime(preferences.settings.focusDuration)
+        }
+        return engine.timeLabel()
+    }
+
+    private func shortTime(_ seconds: TimeInterval) -> String {
+        let total = Int(seconds.rounded(.down))
+        let hours = total / 3600
+        let minutes = (total % 3600) / 60
+        let secs = total % 60
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, secs)
+        }
+        return String(format: "%02d:%02d", minutes, secs)
+    }
+
+    private func stepperNumberFormatter(step: Double) -> NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.allowsFloats = true
+        let digits = step < 1 ? 1 : 0
+        formatter.minimumFractionDigits = digits
+        formatter.maximumFractionDigits = digits
+        return formatter
+    }
+
+    private func applyPreset(_ preset: FocusPresetChoice) {
+        switch preset {
+        case .flow:
+            preferences.settings.focusMinutes = 90
+            preferences.settings.breakMinutes = 20
+        case .pomodoro:
+            preferences.settings.focusMinutes = 30
+            preferences.settings.breakMinutes = 5
+        case .deepwork:
+            preferences.settings.focusMinutes = 50
+            preferences.settings.breakMinutes = 10
+        case .custom:
+            break
+        }
+    }
+
+    private var presetDisplayTitle: String {
+        inferredPreset.title
+    }
+
+    private func smallActionButton(_ title: String, prominent: Bool = false, action: @escaping () -> Void) -> some View {
+        Button(title, action: action)
+            .buttonStyle(.plain)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(prominent ? .white : Color.primary.opacity(0.8))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                prominent ? accent : Color.primary.opacity(0.08),
+                in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+            )
+    }
 
     private func bundleSuffix(_ bundleID: String) -> String {
         bundleID.split(separator: ".").last.map(String.init) ?? bundleID
@@ -519,11 +631,15 @@ struct ContentView: View {
     }
     private var focusBinding: Binding<Double> {
         Binding(get: { preferences.settings.focusMinutes },
-                set: { preferences.settings.focusMinutes = min(max($0, 15), 180) })
+                set: {
+                    preferences.settings.focusMinutes = min(max($0, 15), 180)
+                })
     }
     private var breakBinding: Binding<Double> {
         Binding(get: { preferences.settings.breakMinutes },
-                set: { preferences.settings.breakMinutes = min(max($0, 5), 60) })
+                set: {
+                    preferences.settings.breakMinutes = min(max($0, 5), 60)
+                })
     }
     private var pingMinBinding: Binding<Double> {
         Binding(get: { preferences.settings.pingMinMinutes },
@@ -543,7 +659,9 @@ struct ContentView: View {
     }
     private var microBreakBinding: Binding<Double> {
         Binding(get: { preferences.settings.microBreakSeconds },
-                set: { preferences.settings.microBreakSeconds = min(max($0, 5), 30) })
+                set: {
+                    preferences.settings.microBreakSeconds = min(max($0, 5), 30)
+                })
     }
     private var soundBinding: Binding<String> {
         Binding(get: { preferences.settings.soundName },
@@ -557,23 +675,11 @@ struct ContentView: View {
         Binding(get: { preferences.settings.microBreakEndCueEnabled },
                 set: { preferences.settings.microBreakEndCueEnabled = $0 })
     }
-    private var presetBinding: Binding<String> {
-        Binding(
-            get: {
-                let s = preferences.settings
-                if s.focusMinutes == 90, s.breakMinutes == 20 { return "flow" }
-                if s.focusMinutes == 25, s.breakMinutes == 5  { return "pomodoro" }
-                if s.focusMinutes == 52, s.breakMinutes == 17 { return "deepwork" }
-                return "custom"
-            },
-            set: { preset in
-                switch preset {
-                case "flow":     preferences.settings.focusMinutes = 90; preferences.settings.breakMinutes = 20
-                case "pomodoro": preferences.settings.focusMinutes = 25; preferences.settings.breakMinutes = 5
-                case "deepwork": preferences.settings.focusMinutes = 52; preferences.settings.breakMinutes = 17
-                default: break
-                }
-            }
-        )
+    private var inferredPreset: FocusPresetChoice {
+        let s = preferences.settings
+        if s.focusMinutes == 90, s.breakMinutes == 20 { return .flow }
+        if s.focusMinutes == 30, s.breakMinutes == 5 { return .pomodoro }
+        if s.focusMinutes == 50, s.breakMinutes == 10 { return .deepwork }
+        return .custom
     }
 }

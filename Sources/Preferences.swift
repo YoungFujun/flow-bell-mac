@@ -117,6 +117,45 @@ struct AppSettings: Codable, Equatable {
     var accentColorChoice: AccentColorChoice = .sage
     var languageChoice: LanguageChoice = .chinese
     var blockedApps: [BlockedApp] = []
+    var showTaskPrompt: Bool = true
+
+    // Codable compatibility: provide default values for missing keys
+    enum CodingKeys: String, CodingKey {
+        case focusMinutes
+        case breakMinutes
+        case pingMinMinutes
+        case pingMaxMinutes
+        case microBreakSeconds
+        case soundName
+        case microBreakEndCueEnabled
+        case autoStartNextSession
+        case menuBarDisplayStyle
+        case accentColorChoice
+        case languageChoice
+        case blockedApps
+        case showTaskPrompt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        focusMinutes = try container.decodeIfPresent(Double.self, forKey: .focusMinutes) ?? 90
+        breakMinutes = try container.decodeIfPresent(Double.self, forKey: .breakMinutes) ?? 20
+        pingMinMinutes = try container.decodeIfPresent(Double.self, forKey: .pingMinMinutes) ?? 3
+        pingMaxMinutes = try container.decodeIfPresent(Double.self, forKey: .pingMaxMinutes) ?? 5
+        microBreakSeconds = try container.decodeIfPresent(Double.self, forKey: .microBreakSeconds) ?? 10
+        soundName = try container.decodeIfPresent(String.self, forKey: .soundName) ?? "Glass"
+        microBreakEndCueEnabled = try container.decodeIfPresent(Bool.self, forKey: .microBreakEndCueEnabled) ?? true
+        autoStartNextSession = try container.decodeIfPresent(Bool.self, forKey: .autoStartNextSession) ?? false
+        menuBarDisplayStyle = try container.decodeIfPresent(MenuBarDisplayStyle.self, forKey: .menuBarDisplayStyle) ?? .digital
+        accentColorChoice = try container.decodeIfPresent(AccentColorChoice.self, forKey: .accentColorChoice) ?? .sage
+        languageChoice = try container.decodeIfPresent(LanguageChoice.self, forKey: .languageChoice) ?? .chinese
+        blockedApps = try container.decodeIfPresent([BlockedApp].self, forKey: .blockedApps) ?? []
+        showTaskPrompt = try container.decodeIfPresent(Bool.self, forKey: .showTaskPrompt) ?? true
+    }
+
+    init() {
+        // Default values already set above
+    }
 
     static let defaultValue = AppSettings()
 

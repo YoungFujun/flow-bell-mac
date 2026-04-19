@@ -96,6 +96,11 @@ struct L10n {
     static var languageLabel: String { tr("Language", "语言") }
     static var microBreakEndCue: String { tr("Micro break end cue", "微休息结束提示音") }
     static var autoStartNext: String { tr("Auto-start next focus after rest", "休息结束后自动开始下一轮") }
+    static var showTaskPrompt: String { tr("Prompt for task before focus", "开始前提示输入任务") }
+    static var taskPromptTitle: String { tr("What will you focus on?", "这次专注你要做什么？") }
+    static var taskPromptPlaceholder: String { tr("Write down a specific task...", "写下一个具体的任务…") }
+    static var defaultTaskText: String { tr("Focus", "专注") }
+    static var skip: String { tr("Skip", "跳过") }
     static var accentColor: String { tr("Accent Color", "主题色") }
     static var blockedApps: String { tr("Blocked Apps", "专注禁用 App") }
     static func blockedAppsCount(count: Int) -> String {

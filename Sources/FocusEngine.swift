@@ -27,6 +27,8 @@ final class FocusEngine: ObservableObject {
     @Published private(set) var completedFocusSessions = 0
     @Published private(set) var pingCount = 0
     @Published private(set) var temporarilyAllowedBundleIDs: Set<String> = []
+    @Published private(set) var currentTaskText: String?
+    @Published private(set) var shouldPromptForNextFocus = false
 
     var dailyStats: DailyStatsStore?
 
@@ -43,6 +45,7 @@ final class FocusEngine: ObservableObject {
     private let restOverlayController = RestOverlayController()
     private let blockNoticeController = BlockNoticeController()
     private let microBreakNoticeController = MicroBreakNoticeController()
+    private let taskPromptController = TaskPromptController()
     private var temporarilyAllowedUntil: [String: Date] = [:]
     private var blockedNoticeLastShownAt: [String: Date] = [:]
     private let temporaryAllowDuration: TimeInterval = 5 * 60
@@ -150,11 +153,29 @@ final class FocusEngine: ObservableObject {
     func primaryAction() {
         switch (phase, isRunning) {
         case (.idle, _):
-            startFocusSession()
+            // This is now handled by ContentView calling showTaskPromptIfNeeded
+            showTaskPromptIfNeeded()
         case (_, true):
             break
         case (_, false):
             resume()
+        }
+    }
+
+    func showTaskPromptIfNeeded() {
+        if settings.showTaskPrompt {
+            taskPromptController.show(
+                accentColor: settings.accentColorChoice.color,
+                defaultTaskText: L10n.defaultTaskText,
+                onStart: { text in
+                    self.startFocusSession(taskText: text)
+                },
+                onCancel: {
+                    // 取消：不开始计时，仅关闭面板
+                }
+            )
+        } else {
+            startFocusSession(taskText: L10n.defaultTaskText)
         }
     }
 
@@ -179,10 +200,11 @@ final class FocusEngine: ObservableObject {
         temporarilyAllowedBundleIDs.remove(bundleID)
     }
 
-    private func startFocusSession() {
+    func startFocusSession(taskText: String) {
         clearTemporaryAllowances()
         phase = .focus
         isRunning = true
+        currentTaskText = taskText.isEmpty ? nil : taskText
         activePromptText = nil
         promptEndsAt = nil
         isMicroBreakPromptActive = false
@@ -194,6 +216,7 @@ final class FocusEngine: ObservableObject {
     private func startRestSession() {
         phase = .rest
         isRunning = true
+        currentTaskText = nil
         activePromptText = nil
         promptEndsAt = nil
         isMicroBreakPromptActive = false
@@ -234,13 +257,35 @@ final class FocusEngine: ObservableObject {
 
     private func finishRestAndStartNextFocus() {
         restOverlayController.close()
-        startFocusSession()
+        phase = .idle
+        isRunning = false
+        phaseEndDate = nil
+        nextPingDate = nil
+        secondsRemaining = 0
+        activePromptText = nil
+        promptEndsAt = nil
+        isMicroBreakPromptActive = false
+        currentTaskText = nil
+        shouldPromptForNextFocus = true
+    }
+
+    func clearShouldPromptForNextFocus() {
+        shouldPromptForNextFocus = false
     }
 
     private func finishRestSession() {
         if settings.autoStartNextSession {
             restOverlayController.close()
-            startFocusSession()
+            phase = .idle
+            isRunning = false
+            phaseEndDate = nil
+            nextPingDate = nil
+            secondsRemaining = 0
+            activePromptText = nil
+            promptEndsAt = nil
+            isMicroBreakPromptActive = false
+            currentTaskText = nil
+            shouldPromptForNextFocus = true
         } else {
             restOverlayController.close()
             phase = .idle
@@ -298,6 +343,8 @@ final class FocusEngine: ObservableObject {
         promptEndsAt = nil
         isMicroBreakPromptActive = false
         pingCount = 0
+        currentTaskText = nil
+        shouldPromptForNextFocus = false
     }
 
     private func clearTemporaryAllowances() {
@@ -444,6 +491,7 @@ final class FocusEngine: ObservableObject {
         stopApplicationObservers()
         audioPlayer?.stop()
         audioPlayer = nil
+        taskPromptController.close()
     }
 
     private func handleBlockedAppIfNeeded(runningApp app: NSRunningApplication?) {

@@ -71,13 +71,20 @@ private struct MenuBarLabelView: View {
     }
 }
 
+private enum MenuBarAppearance {
+    static var isDark: Bool {
+        NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+    }
+    static var labelColor: NSColor { isDark ? .white : .black }
+    static var secondaryAlpha: CGFloat { isDark ? 0.5 : 0.4 }
+    static var trackAlpha: CGFloat { isDark ? 0.3 : 0.18 }
+}
+
 private enum ClockBoxImage {
     static func make(text: String) -> NSImage {
+        let fg = MenuBarAppearance.labelColor
         let font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .foregroundColor: NSColor.black
-        ]
+        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: fg]
         let str = NSAttributedString(string: text, attributes: attrs)
         let textSize = str.size()
         let hPad: CGFloat = 5
@@ -89,18 +96,19 @@ private enum ClockBoxImage {
         let borderRect = NSRect(origin: .zero, size: size).insetBy(dx: 0.5, dy: 0.5)
         let path = NSBezierPath(roundedRect: borderRect, xRadius: 3, yRadius: 3)
         path.lineWidth = 1
-        NSColor.black.withAlphaComponent(0.5).setStroke()
+        fg.withAlphaComponent(MenuBarAppearance.secondaryAlpha).setStroke()
         path.stroke()
 
         str.draw(at: NSPoint(x: hPad, y: vPad))
         image.unlockFocus()
-        image.isTemplate = true
+        image.isTemplate = false
         return image
     }
 }
 
 private enum StatusRingImage {
     static func make(phase: FocusEngine.Phase, isRunning: Bool, progress: Double) -> NSImage {
+        let fg = MenuBarAppearance.labelColor
         let size = NSSize(width: 22, height: 22)
         let image = NSImage(size: size)
         image.lockFocus()
@@ -110,7 +118,7 @@ private enum StatusRingImage {
         let center = NSPoint(x: rect.midX, y: rect.midY)
         let radius = ringRect.width / 2
 
-        NSColor.black.withAlphaComponent(0.18).setStroke()
+        fg.withAlphaComponent(MenuBarAppearance.trackAlpha).setStroke()
         let baseRing = NSBezierPath(ovalIn: ringRect)
         baseRing.lineWidth = 2.5
         baseRing.stroke()
@@ -126,11 +134,11 @@ private enum StatusRingImage {
                       startAngle: 90, endAngle: 90 - (360 * span), clockwise: true)
         arc.lineWidth = 2.5
         arc.lineCapStyle = .round
-        NSColor.black.withAlphaComponent(isRunning ? 1.0 : 0.55).setStroke()
+        fg.withAlphaComponent(isRunning ? 1.0 : 0.55).setStroke()
         arc.stroke()
 
         image.unlockFocus()
-        image.isTemplate = true
+        image.isTemplate = false
         return image
     }
 }

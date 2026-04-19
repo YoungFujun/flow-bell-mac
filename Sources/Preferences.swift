@@ -9,37 +9,37 @@ struct BlockedApp: Codable, Equatable, Hashable, Identifiable {
 }
 
 enum AccentColorChoice: String, Codable, CaseIterable, Identifiable {
-    case blue
-    case green
-    case orange
-    case pink
-    case purple
-    case teal
-    case indigo
+    case systemBlue
+    case sage
+    case sierra
+    case lavender
+    case rose
+    case titanium
+    case starlight
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .blue:   "蓝"
-        case .green:  "绿"
-        case .orange: "橙"
-        case .pink:   "粉"
-        case .purple: "紫"
-        case .teal:   "青"
-        case .indigo: "靛"
+        case .systemBlue: "经典蓝"
+        case .sage:       "鼠尾草"
+        case .sierra:     "山脉蓝"
+        case .lavender:   "薰衣草"
+        case .rose:       "玫瑰"
+        case .titanium:   "钛金"
+        case .starlight:  "星光"
         }
     }
 
     var color: Color {
         switch self {
-        case .blue:   Color(red: 0.000, green: 0.478, blue: 1.000) // #007AFF
-        case .green:  Color(red: 0.204, green: 0.780, blue: 0.349) // #34C759
-        case .orange: Color(red: 1.000, green: 0.584, blue: 0.000) // #FF9500
-        case .pink:   Color(red: 1.000, green: 0.176, blue: 0.333) // #FF2D55
-        case .purple: Color(red: 0.686, green: 0.322, blue: 0.871) // #AF52DE
-        case .teal:   Color(red: 0.353, green: 0.784, blue: 0.980) // #5AC8FA
-        case .indigo: Color(red: 0.345, green: 0.337, blue: 0.839) // #5856D6
+        case .systemBlue: Color(red: 0.000, green: 0.478, blue: 1.000) // iOS System Blue #007AFF
+        case .sage:       Color(red: 0.380, green: 0.573, blue: 0.455)
+        case .sierra:     Color(red: 0.424, green: 0.620, blue: 0.784)
+        case .lavender:   Color(red: 0.573, green: 0.490, blue: 0.710)
+        case .rose:       Color(red: 0.784, green: 0.455, blue: 0.490)
+        case .titanium:   Color(red: 0.490, green: 0.490, blue: 0.510)
+        case .starlight:  Color(red: 0.686, green: 0.580, blue: 0.400)
         }
     }
 }
@@ -68,7 +68,7 @@ struct AppSettings: Codable, Equatable {
     var microBreakEndCueEnabled: Bool = true
     var autoStartNextSession: Bool = false
     var menuBarDisplayStyle: MenuBarDisplayStyle = .digital
-    var accentColorChoice: AccentColorChoice = .blue
+    var accentColorChoice: AccentColorChoice = .sage
     var blockedApps: [BlockedApp] = []
 
     static let defaultValue = AppSettings()

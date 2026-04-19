@@ -2,43 +2,40 @@ import AppKit
 import SwiftUI
 
 struct ContentView: View {
-    private enum SettingsRoute {
-        case main
-        case weekStats
-    }
-
     @EnvironmentObject private var preferences: PreferencesStore
     @EnvironmentObject private var engine: FocusEngine
     @EnvironmentObject private var installedApps: InstalledAppsStore
     @EnvironmentObject private var dailyStats: DailyStatsStore
     @State private var appSearchQuery = ""
-    @State private var settingsRoute: SettingsRoute = .main
 
     @State private var durationExpanded = false
     @State private var soundExpanded = false
-    @State private var blockedAppsExpanded = false
+    @State private var showingBlockedApps = false
 
     private var accent: Color { preferences.settings.accentColorChoice.color }
 
     var body: some View {
-        VStack(spacing: 0) {
-            headerCard
-            menuBarPickerRow
-            Divider()
-            sessionCard
-            Divider()
-            switch settingsRoute {
-            case .main:
-                settingsForm
-            case .weekStats:
-                weekStatsView
+        Group {
+            if showingBlockedApps {
+                blockedAppsPage
+                    .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .trailing)))
+            } else {
+                VStack(spacing: 0) {
+                    headerCard
+                    menuBarPickerRow
+                    Divider()
+                    sessionCard
+                    Divider()
+                    settingsForm
+                    Divider()
+                    footerRow
+                }
+                .transition(.asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .leading)))
             }
-            Divider()
-            footerRow
         }
-        .background(Color.white.opacity(0.72))
-        .background(.ultraThinMaterial)
+        .background(Color(NSColor.windowBackgroundColor))
         .fixedSize(horizontal: false, vertical: true)
+        .animation(.easeInOut(duration: 0.25), value: showingBlockedApps)
     }
 
     // MARK: - Header
@@ -243,21 +240,17 @@ struct ContentView: View {
 
             Divider()
 
-            collapsibleSection(title: "专注禁用 App", icon: "apps.iphone.badge.plus", isExpanded: $blockedAppsExpanded) {
-                blockedAppsContent
-            }
-
-            Divider().padding(.leading, 20)
-
-            Button(action: { settingsRoute = .weekStats }) {
-                HStack {
-                    Image(systemName: "chart.bar.fill")
+            Button(action: { withAnimation(.easeInOut(duration: 0.25)) { showingBlockedApps = true } }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "apps.iphone.badge.plus")
                         .foregroundStyle(.secondary)
                         .frame(width: 16)
-                    Text("本周统计")
+                    Text("专注禁用 App")
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(Color(NSColor.labelColor))
                     Spacer()
-                    Text(weekSummaryLabel)
+                    let count = preferences.settings.blockedApps.count
+                    Text(count == 0 ? "未设置" : "\(count) 个")
                         .foregroundStyle(.secondary)
                     Image(systemName: "chevron.right")
                         .font(.system(size: 10, weight: .semibold))
@@ -268,6 +261,7 @@ struct ContentView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+
         }
         .font(.system(size: 13))
     }
@@ -275,6 +269,7 @@ struct ContentView: View {
     private func collapsibleSection<Content: View>(
         title: String,
         icon: String,
+        subtitle: String? = nil,
         isExpanded: Binding<Bool>,
         @ViewBuilder content: () -> Content
     ) -> some View {
@@ -288,6 +283,10 @@ struct ContentView: View {
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(Color(NSColor.labelColor))
                     Spacer()
+                    if let subtitle, !isExpanded.wrappedValue {
+                        Text(subtitle)
+                            .foregroundStyle(.secondary)
+                    }
                     Image(systemName: "chevron.right")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.secondary)
@@ -330,10 +329,11 @@ struct ContentView: View {
             Text(label)
             Spacer()
             HStack(spacing: 6) {
-                TextField("", value: value, formatter: numberFormatter(step: step))
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 52)
-                    .multilineTextAlignment(.trailing)
+                Text(step < 1
+                     ? String(format: "%.1f", value.wrappedValue)
+                     : "\(Int(value.wrappedValue))")
+                    .monospacedDigit()
+                    .frame(width: 36, alignment: .trailing)
                 Text(suffix)
                     .foregroundStyle(.secondary)
                     .fixedSize()
@@ -365,6 +365,37 @@ struct ContentView: View {
 
     // MARK: - Blocked apps
 
+    private var blockedAppsPage: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button(action: { withAnimation(.easeInOut(duration: 0.25)) { showingBlockedApps = false } }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 13, weight: .semibold))
+                        Text("返回")
+                            .font(.system(size: 13))
+                    }
+                    .foregroundStyle(accent)
+                }
+                .buttonStyle(.plain)
+                Spacer()
+                Text("专注禁用 App")
+                    .font(.system(size: 13, weight: .semibold))
+                Spacer()
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 13, weight: .semibold))
+                    Text("返回").font(.system(size: 13))
+                }
+                .opacity(0)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            Divider()
+            blockedAppsContent
+        }
+    }
+
     private var blockedAppsContent: some View {
         VStack(spacing: 0) {
             TextField("搜索应用，例如 微信", text: $appSearchQuery)
@@ -384,7 +415,12 @@ struct ContentView: View {
                             }
                             appSearchQuery = ""
                         } label: {
-                            HStack {
+                            HStack(spacing: 10) {
+                                if let icon = appIcon(for: app.bundleIdentifier) {
+                                    Image(nsImage: icon)
+                                        .resizable()
+                                        .frame(width: 24, height: 24)
+                                }
                                 Text(app.displayName)
                                 Spacer()
                                 Text(bundleSuffix(app.bundleIdentifier))
@@ -413,7 +449,12 @@ struct ContentView: View {
             } else {
                 VStack(spacing: 0) {
                     ForEach(preferences.settings.blockedApps) { app in
-                        HStack {
+                        HStack(spacing: 10) {
+                            if let icon = appIcon(for: app.bundleIdentifier) {
+                                Image(nsImage: icon)
+                                    .resizable()
+                                    .frame(width: 28, height: 28)
+                            }
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(app.displayName)
                                 Text(app.bundleIdentifier)
@@ -425,12 +466,12 @@ struct ContentView: View {
                                 preferences.settings.blockedApps.removeAll { $0.bundleIdentifier == app.bundleIdentifier }
                             }
                             .buttonStyle(.borderless)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(.secondary)
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 8)
                         .background(Color.primary.opacity(0.03))
-                        Divider().padding(.leading, 20)
+                        Divider().padding(.leading, 54)
                     }
                 }
             }
@@ -445,10 +486,13 @@ struct ContentView: View {
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
             Spacer()
-            Button("退出 App") { NSApplication.shared.terminate(nil) }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
-                .controlSize(.small)
+            Button("退出") { NSApplication.shared.terminate(nil) }
+                .buttonStyle(.plain)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 6))
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 10)
@@ -456,17 +500,15 @@ struct ContentView: View {
 
     // MARK: - Helpers
 
-    private func numberFormatter(step: Double) -> NumberFormatter {
-        let f = NumberFormatter()
-        f.numberStyle = .decimal
-        f.minimumFractionDigits = step < 1 ? 1 : 0
-        f.maximumFractionDigits = step < 1 ? 1 : 0
-        f.usesGroupingSeparator = false
-        return f
-    }
+
 
     private func bundleSuffix(_ bundleID: String) -> String {
         bundleID.split(separator: ".").last.map(String.init) ?? bundleID
+    }
+
+    private func appIcon(for bundleID: String) -> NSImage? {
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { return nil }
+        return NSWorkspace.shared.icon(forFile: url.path)
     }
 
     // MARK: - Bindings
@@ -515,120 +557,6 @@ struct ContentView: View {
         Binding(get: { preferences.settings.microBreakEndCueEnabled },
                 set: { preferences.settings.microBreakEndCueEnabled = $0 })
     }
-    private var weekSummaryLabel: String {
-        let m = dailyStats.weekTotalMinutes
-        if m == 0 { return "暂无记录" }
-        if m >= 60 {
-            let h = m / 60
-            let rem = m % 60
-            return rem == 0 ? "本周 \(h)h" : "本周 \(h)h\(rem)m"
-        }
-        return "本周 \(m)m"
-    }
-
-    private var weekStatsView: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Button { settingsRoute = .main } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 11, weight: .semibold))
-                }
-                .buttonStyle(.borderless)
-                Text("本周统计")
-                    .font(.system(size: 13, weight: .semibold))
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 14)
-            .padding(.bottom, 10)
-
-            HStack(spacing: 10) {
-                statPill(title: "本周专注", value: formatMinutes(dailyStats.weekTotalMinutes))
-                statPill(title: "本周番茄", value: "\(dailyStats.weekTotalSessions)")
-            }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 16)
-
-            weekBarChart
-                .padding(.horizontal, 20)
-                .padding(.bottom, 16)
-        }
-    }
-
-    private var weekBarChart: some View {
-        let days = last7Days()
-        let maxMinutes = days.map(\.minutes).max() ?? 1
-        let barMaxHeight: CGFloat = 80
-
-        return HStack(alignment: .bottom, spacing: 6) {
-            ForEach(days, id: \.label) { day in
-                let fraction = maxMinutes > 0 ? CGFloat(day.minutes) / CGFloat(maxMinutes) : 0
-                let barHeight = max(fraction * barMaxHeight, day.minutes > 0 ? 4 : 0)
-                let isToday = day.isToday
-
-                VStack(spacing: 4) {
-                    if day.minutes > 0 {
-                        Text(formatMinutes(day.minutes))
-                            .font(.system(size: 8))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    } else {
-                        Text(" ").font(.system(size: 8))
-                    }
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(isToday ? accent : accent.opacity(0.35))
-                        .frame(height: barHeight == 0 ? 2 : barHeight)
-                        .opacity(barHeight == 0 ? 0.15 : 1)
-                    Text(day.label)
-                        .font(.system(size: 9))
-                        .foregroundStyle(isToday ? accent : Color.secondary)
-                        .fontWeight(isToday ? .semibold : .regular)
-                }
-                .frame(maxWidth: .infinity)
-            }
-        }
-        .frame(height: barMaxHeight + 40)
-    }
-
-    private struct DayBar {
-        let label: String
-        let minutes: Int
-        let isToday: Bool
-    }
-
-    private func last7Days() -> [DayBar] {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
-        return (0..<7).reversed().map { offset -> DayBar in
-            let date = cal.date(byAdding: .day, value: -offset, to: today)!
-            let rec = dailyStats.weekRecords.first { cal.isDate($0.date, inSameDayAs: date) }
-            let formatter = DateFormatter()
-            formatter.dateFormat = "E"
-            formatter.locale = Locale(identifier: "zh_CN")
-            let label = formatter.string(from: date)
-            return DayBar(label: label, minutes: rec?.focusMinutes ?? 0, isToday: offset == 0)
-        }
-    }
-
-    private func formatMinutes(_ m: Int) -> String {
-        guard m > 0 else { return "0m" }
-        if m >= 60 {
-            let h = m / 60; let r = m % 60
-            return r == 0 ? "\(h)h" : "\(h)h\(r)m"
-        }
-        return "\(m)m"
-    }
-
-    private func dayLabel(_ date: Date) -> String {
-        let cal = Calendar.current
-        if cal.isDateInToday(date) { return "今天" }
-        if cal.isDateInYesterday(date) { return "昨天" }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "M月d日 E"
-        formatter.locale = Locale(identifier: "zh_CN")
-        return formatter.string(from: date)
-    }
-
     private var presetBinding: Binding<String> {
         Binding(
             get: {

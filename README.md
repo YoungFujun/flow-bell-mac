@@ -12,9 +12,9 @@
 
 ## 设计理念
 
-### 番茄工作法的隐性问题
+### 固定节奏的隐性问题
 
-番茄工作法把工作切分为固定的 25 分钟块。它是有效的——但固定节奏会带来一个副作用：**你开始预期休息的到来**。在最后几分钟，大脑已经悄悄开始"收工"；铃声一响，又要花时间重新进入状态。节奏越固定，这种心理摩擦越明显。
+番茄工作法把工作切分为固定的时间块，是很多人的入门选择。它是有效的——问题不在于 25 分钟，而在于**固定节奏本身**：当你知道铃声会在某个时间响起，大脑就会提前"收工"。在最后几分钟，注意力已经开始松弛；铃声一响，又要花时间重新进入状态。节奏越固定，这种心理摩擦越明显——无论你把时间块设成 25 分钟还是 52 分钟。
 
 ### 为什么随机性有效
 
@@ -150,7 +150,7 @@ MIT
 
 ### The Idea
 
-The Pomodoro Technique works by dividing work into fixed 25-minute blocks. It's effective — but the fixed rhythm creates a subtle problem: **you start anticipating the break**. In the final minutes, your brain is already winding down; when the bell rings, you need time to rebuild momentum. The more predictable the schedule, the more pronounced this effect.
+Fixed time blocks — whether 25 minutes or 52 — are a popular way to structure work. They're effective. But the fixed rhythm creates a subtle problem: **you start anticipating the break**. In the final minutes, your brain is already winding down; when the bell rings, you need time to rebuild momentum. The issue isn't the length of the block — it's the predictability.
 
 Flow Bell works differently. Because the bell arrives at a random interval, you can't countdown to it — there's nothing to wait for. Behavioral psychology has long shown that unpredictable cues sustain attention better than fixed ones: the brain stays engaged precisely because it can't predict what comes next.
 

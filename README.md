@@ -1,14 +1,142 @@
 # Flow Bell
 
-> A macOS menu bar focus timer with random bell cues — built on the idea that irregular interruptions preserve flow better than rigid time blocks.
+> macOS 菜单栏专注计时器，以随机提示音驱动微休息——让不规则的短暂中断保护专注状态，而非打断它。
 
 ![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey)
 ![Swift](https://img.shields.io/badge/swift-5.10-orange)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
+[English](#english)
+
 ---
 
-## The Idea
+## 设计理念
+
+番茄工作法把工作切分为固定的 25 分钟块，用严格的时间边界强制休息。它是有效的——但固定节奏本身有时会成为干扰：你开始盯着倒计时，在"再多做一点"和"应该停下"之间反复权衡。
+
+**Flow Bell** 采用了一种不同的思路，灵感来自正念微休息与可变比例强化的研究：
+
+- 你选择一个更长的专注时段（默认 90 分钟），消除对固定终点的心理博弈。
+- 专注期间，铃声会在**随机时间**响起（默认每 3–5 分钟一次）。响起时，你闭眼休息 10 秒——仅此而已。
+- 随机性是关键。正因为你无法预测铃声何时到来，就无法对它产生期待。微休息来了，你休息，然后回到工作——专注的线索不会断开。
+- 专注时段结束后进入真正的休息（默认 20 分钟），一个置顶浮窗倒计时接管屏幕。
+
+最终形成的节奏不像节拍器，而更像自然的呼吸：持续的深度工作，穿插短暂而不可预期的放松。
+
+---
+
+## 功能
+
+### 核心计时
+- **专注阶段** — 可设置时长（15–180 分钟），菜单栏实时倒计时
+- **休息阶段** — 置顶浮窗倒计时，始终显示在所有窗口之上，支持提前结束
+- 随时暂停 / 继续 / 重置；继续后距下一次铃声至少保留 30 秒缓冲
+
+### 随机提示音（微休息）
+- 铃声在设定区间内随机触发（如 3–5 分钟）
+- 浮窗弹出倒计时提示：「闭眼微休息 — 10 秒」
+- 可选微休息结束提示音（「回到专注」）
+- 下一次铃声仅在当前微休息结束后才开始安排，不会重叠触发
+
+### App 专注拦截
+- 设置禁用 App 列表，专注期间被打开的应用自动隐藏
+- 被拦截时弹出简短提示通知
+
+### 菜单栏显示
+两种模式可选：
+- **数字时钟** — 带边框的倒计时；空闲时显示设定的专注时长（如 `90:00`）
+- **圆环盈缺** — 弧形进度随专注推进逐渐填满
+
+### 每日与每周统计
+- 主界面显示今日专注时长与完成轮次
+- 设置页内置「本周统计」入口，7 天柱状图展示历史数据
+- 数据按日重置，保留最近 7 天历史
+
+---
+
+## 安装
+
+### 下载安装（推荐）
+从 [最新发布页面](../../releases/latest) 下载 `Flow Bell.zip`，解压后将 `Flow Bell.app` 移入 `/Applications`。
+
+> 首次启动时 macOS 可能显示安全警告，前往 **系统设置 → 隐私与安全性**，点击「仍要打开」。
+
+### 从源码构建
+需要 Xcode Command Line Tools 和 Swift 5.10+。
+
+```bash
+git clone https://github.com/YoungFujun/flow-bell-mac.git
+cd flow-bell-mac
+./build_app.sh
+```
+
+脚本将编译 release 版本、生成图标，并输出：
+- `dist/Flow Bell.app`
+- `dist/Install Flow Bell.command` — 双击即可安装到 `/Applications`
+- `dist/Flow Bell.zip`
+
+---
+
+## 设置项
+
+| 设置 | 默认值 | 范围 |
+|---|---|---|
+| 专注时长 | 90 分钟 | 15–180 分钟 |
+| 休息时长 | 20 分钟 | 5–60 分钟 |
+| 随机铃声最短间隔 | 3 分钟 | 1–15 分钟 |
+| 随机铃声最长间隔 | 5 分钟 | 1–20 分钟 |
+| 微休息时长 | 10 秒 | 5–30 秒 |
+| 提示音 | Glass | Glass / Hero / Submarine / Funk |
+| 微休息结束提示音 | 开启 | — |
+| 休息结束自动开始下一轮 | 关闭 | — |
+
+内置预设：**Flow 90/20**、**Pomodoro 25/5**、**Deep Work 52/17**
+
+---
+
+## 技术栈
+
+- **SwiftUI** + **AppKit** — 菜单栏 Extra、浮窗 NSPanel
+- **Swift Package Manager** — 无需 Xcode 工程文件
+- **UserNotifications** — 系统通知集成
+- **NSSound** — 仅使用系统内置音效，无需额外音频资源
+- **UserDefaults** — 设置与统计数据的轻量持久化
+
+要求 macOS 13 Ventura 及以上。
+
+---
+
+## 项目结构
+
+```
+Sources/
+  AppMain.swift                    程序入口，菜单栏图标渲染
+  ContentView.swift                主面板 UI
+  FocusEngine.swift                状态机、计时器、Ping 调度
+  Preferences.swift                设置模型与持久化
+  DailyStats.swift                 每日/每周统计存储
+  RestOverlayController.swift      休息置顶浮窗
+  BlockNoticeController.swift      App 拦截通知
+  MicroBreakNoticeController.swift 微休息倒计时通知
+  InstalledAppsStore.swift         已安装 App 枚举（用于拦截列表）
+Resources/
+  Info.plist
+build_app.sh                       构建与打包脚本
+```
+
+---
+
+## 许可证
+
+MIT
+
+---
+
+## English
+
+> A macOS menu bar focus timer with random bell cues — built on the idea that irregular interruptions preserve flow better than rigid time blocks.
+
+### The Idea
 
 The Pomodoro Technique works by dividing work into fixed 25-minute blocks, enforcing rest through strict time boundaries. It's effective — but the fixed rhythm can itself become a distraction: you start watching the clock, negotiating with yourself about whether to "finish this thought" before the timer rings.
 
@@ -19,48 +147,15 @@ The Pomodoro Technique works by dividing work into fixed 25-minute blocks, enfor
 - The randomness is intentional. Because you can't predict when the bell will ring, you can't build anticipation for it. The micro-break arrives, you rest, and you return to work — without breaking the thread of concentration.
 - At the end of the focus block, a proper rest begins (default: 20 minutes), with a floating countdown window that stays on top of all other apps.
 
-The result is a rhythm that feels less like a metronome and more like natural breathing: sustained deep work, punctuated by brief, unpredictable moments of rest.
+### Features
 
----
-
-## Features
-
-### Core Timer
-- **Focus phase** — configurable duration (15–180 min), with a live countdown in the menu bar
-- **Rest phase** — floating countdown window, always on top, with an option to skip early
-- Pause / resume / reset at any time; resuming after pause adds a 30-second buffer before the next bell
-
-### Random Bell (Micro-breaks)
-- Bell rings at a random point within a configurable interval (e.g. 3–5 min)
-- A floating notice appears with a countdown: "Close your eyes — 10 seconds"
-- Optional end-cue sound when the micro-break finishes ("Back to focus")
-- The next bell is only scheduled *after* the current micro-break ends — no stacking
-
-### App Blocking
-- Add apps to a block list; they are automatically hidden during focus sessions
-- A brief notice appears when a blocked app is intercepted
-
-### Menu Bar Display
-Two modes:
-- **Digital clock** — boxed countdown; shows configured focus duration when idle (e.g. `90:00`)
-- **Progress ring** — arc fills as the session progresses
-
-### Daily & Weekly Stats
-- Today's focus minutes and completed sessions shown in the main panel
-- "This week" view with a 7-day bar chart (accessible via settings)
-- Data resets daily; history kept for 7 days
-
----
-
-## Installation
-
-### Download (recommended)
-Download `Flow Bell.zip` from the [latest release](../../releases/latest), unzip, and move `Flow Bell.app` to `/Applications`.
-
-> On first launch, macOS may show a security warning. Go to **System Settings → Privacy & Security** and click **Open Anyway**.
+- Configurable focus / rest durations with three built-in presets
+- Random bell micro-breaks with floating countdown notice
+- App blocking during focus sessions
+- Dual menu bar display: digital clock or progress ring
+- 7-day bar chart stats
 
 ### Build from source
-Requires Xcode Command Line Tools and Swift 5.10+.
 
 ```bash
 git clone https://github.com/YoungFujun/flow-bell-mac.git
@@ -68,62 +163,4 @@ cd flow-bell-mac
 ./build_app.sh
 ```
 
-The script compiles a release build, generates an app icon, and outputs:
-- `dist/Flow Bell.app`
-- `dist/Install Flow Bell.command` — double-click to install to `/Applications`
-- `dist/Flow Bell.zip`
-
----
-
-## Settings
-
-| Setting | Default | Range |
-|---|---|---|
-| Focus duration | 90 min | 15–180 min |
-| Rest duration | 20 min | 5–60 min |
-| Bell interval (min) | 3 min | 1–15 min |
-| Bell interval (max) | 5 min | 1–20 min |
-| Micro-break length | 10 sec | 5–30 sec |
-| Alert sound | Glass | Glass / Hero / Submarine / Funk |
-| End-cue sound | On | — |
-| Auto-start next session | Off | — |
-
-Presets: **Flow 90/20**, **Pomodoro 25/5**, **Deep Work 52/17**
-
----
-
-## Tech Stack
-
-- **SwiftUI** + **AppKit** — menu bar extra, floating NSPanel windows
-- **Swift Package Manager** — no Xcode project file required
-- **UserNotifications** — system notification integration
-- **NSSound** — system audio only, no bundled audio assets
-- **UserDefaults** — lightweight persistence for settings and stats
-
-macOS 13 Ventura or later required.
-
----
-
-## Project Structure
-
-```
-Sources/
-  AppMain.swift                    app entry, menu bar label rendering
-  ContentView.swift                main panel UI
-  FocusEngine.swift                state machine, timer, ping scheduling
-  Preferences.swift                settings model + persistence
-  DailyStats.swift                 daily/weekly stats store
-  RestOverlayController.swift      floating rest countdown window
-  BlockNoticeController.swift      app-blocked notice
-  MicroBreakNoticeController.swift micro-break countdown notice
-  InstalledAppsStore.swift         enumerates installed apps for block list
-Resources/
-  Info.plist
-build_app.sh                       build + package script
-```
-
----
-
-## License
-
-MIT
+Requires Xcode Command Line Tools and Swift 5.10+. macOS 13 Ventura or later.

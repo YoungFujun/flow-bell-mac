@@ -37,12 +37,13 @@
 
 ### 真正起作用的是什么
 
-随机铃声解决的是「被打断感」——让休息悄悄发生，而不破坏心流。但对效率影响更直接的，是另外两个设计：
+随机铃声解决的是「被打断感」——让休息悄悄发生，而不破坏心流。但对效率影响更直接的，是以下三个设计：
 
+- **Session 启动提示**：开始前写下这次要做什么，把模糊的「开始工作」变成一个具体的行动目标，降低启动阻力。
 - **置顶浮窗强制离屏**：休息阶段浮窗始终置顶，让你真正停下来，而不是「休息」时继续盯着屏幕。这是恢复认知资源最有效的部分。
 - **App 拦截**：专注期间自动隐藏干扰应用，把环境管理的决策成本降到零。
 
-如果你容易被手机或其他应用分心，App 拦截可能是这个 app 里对你最实用的功能。
+三者合在一起，覆盖了工作循环里三个真实的摩擦点：启动、干扰、恢复。
 
 ---
 
@@ -51,6 +52,7 @@
 ### 核心计时
 - **专注阶段** — 可设置时长（15–180 分钟），菜单栏实时倒计时
 - **休息阶段** — 置顶浮窗倒计时，始终显示在所有窗口之上；支持最小化、提前结束休息、直接开始下一轮专注
+- **Session 启动提示** — 开始专注前弹出输入框，写下本次要完成的具体任务；任务文字显示在计时器下方，专注结束后自动消失。可在设置中关闭。
 - 随时暂停 / 继续 / 重置；继续后距下一次铃声至少保留 30 秒缓冲
 
 ### 随机提示音（微休息）
@@ -115,6 +117,7 @@ cd flow-bell-mac
 | 主题色 | 经典蓝 | 经典蓝 / 鼠尾草 / 山脉蓝 / 薰衣草 / 玫瑰 / 钛金 / 星光 |
 | 微休息结束提示音 | 开启 | — |
 | 休息结束自动开始下一轮 | 关闭 | — |
+| 开始前提示输入任务 | 开启 | — |
 
 内置预设：**Pomodoro 30/5**、**Focus 50/10**、**Flow 90/20**
 
@@ -176,16 +179,18 @@ The result feels less like a metronome and more like natural breathing.
 
 ### What Really Makes It Work
 
-The random bell addresses the "interrupted feeling" — letting rest happen quietly without breaking flow. But what affects efficiency more directly are two other design features:
+The random bell addresses the "interrupted feeling" — letting rest happen quietly without breaking flow. But what affects efficiency more directly are these three design features:
 
+- **Session startup prompt**: Write down what you'll focus on before starting, turning the vague "start working" into a concrete action goal, reducing startup friction.
 - **Always-on-top rest overlay**: During rest, the overlay stays on top of all windows, forcing you to actually step away rather than staring at the screen during "rest." This is the most effective part for cognitive recovery.
 - **App blocking**: During focus sessions, distracting apps are automatically hidden, reducing the decision cost of environment management.
 
-If you're prone to distraction from your phone or other apps, App blocking may be the most practical feature for you.
+Together, they cover three real friction points in the work cycle: starting, distraction, and recovery.
 
 ### Features
 
 - Configurable focus / rest durations with three built-in presets (Pomodoro 30/5, Focus 50/10, Flow 90/20)
+- **Session startup prompt** — Input box before focus starts to write down the specific task; task text displayed below timer, disappears after focus ends. Can be disabled in settings.
 - Random bell micro-breaks with floating countdown notice
 - App blocking during focus sessions
 - Dual menu bar display: digital clock or progress ring

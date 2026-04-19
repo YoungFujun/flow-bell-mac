@@ -70,6 +70,10 @@
 "Bell Sound" = "提示音";
 "Micro break end cue" = "微休息结束提示音";
 "Auto-start next focus after rest" = "休息结束后自动开始下一轮";
+"Prompt for task before focus" = "开始前提示输入任务";
+"What will you focus on?" = "这次专注你要做什么？";
+"Write down a specific task..." = "写下一个具体的任务…";
+"Skip" = "跳过";
 "Accent Color" = "主题色";
 "Blocked Apps" = "专注禁用 App";
 "Not configured" = "未设置";

@@ -46,6 +46,11 @@ struct ContentView: View {
         .frame(height: panelHeight, alignment: .top)
         .background(Color(NSColor.windowBackgroundColor))
         .id(preferences.settings.languageChoice) // Force UI refresh when language changes
+        .onChange(of: engine.shouldPromptForNextFocus) { shouldPrompt in
+            guard shouldPrompt else { return }
+            engine.clearShouldPromptForNextFocus()
+            engine.showTaskPromptIfNeeded()
+        }
     }
 
     private var homeContent: some View {
@@ -66,18 +71,27 @@ struct ContentView: View {
     // MARK: - Header
 
     private var headerCard: some View {
-        HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(engine.phaseCaption)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .tracking(0.5)
-                Text(headerTimeLabel)
-                    .font(.system(size: 44, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
+        VStack(spacing: 4) {
+            HStack(alignment: .center, spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(engine.phaseCaption)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .tracking(0.5)
+                    Text(headerTimeLabel)
+                        .font(.system(size: 44, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                }
+                Spacer()
+                headerRing
             }
-            Spacer()
-            headerRing
+            if let taskText = engine.currentTaskText, engine.phase == .focus {
+                Text(taskText)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
@@ -171,13 +185,28 @@ struct ContentView: View {
 
     private var controlRow: some View {
         HStack(spacing: 10) {
-            actionButton(label: engine.primaryButtonLabel, action: { engine.primaryAction() },
-                         prominent: true, disabled: !engine.canPrimaryAction)
+            Button(action: handleStartAction) {
+                Text(engine.primaryButtonLabel)
+                    .font(.system(size: 14, weight: .semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(
+                        engine.canPrimaryAction ? accent : accent.opacity(0.35),
+                        in: RoundedRectangle(cornerRadius: 10)
+                    )
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+            .disabled(!engine.canPrimaryAction)
             actionButton(label: L10n.pause, action: { engine.pauseAction() },
                          prominent: false, disabled: !engine.canPause)
             actionButton(label: L10n.reset, action: { engine.stop() },
                          prominent: false, disabled: !engine.canReset)
         }
+    }
+
+    private func handleStartAction() {
+        engine.showTaskPromptIfNeeded()
     }
 
     private func actionButton(label: String, action: @escaping () -> Void, prominent: Bool, disabled: Bool) -> some View {
@@ -285,6 +314,8 @@ struct ContentView: View {
                     .tint(accent)
                     .frame(width: 170)
                 }
+                formDivider()
+                formToggleRow(L10n.showTaskPrompt, isOn: showTaskPromptBinding)
                 formDivider()
                 formToggleRow(L10n.microBreakEndCue, isOn: microBreakEndCueBinding)
                 formDivider()
@@ -693,5 +724,9 @@ struct ContentView: View {
         if s.focusMinutes == 30, s.breakMinutes == 5 { return .pomodoro }
         if s.focusMinutes == 50, s.breakMinutes == 10 { return .deepwork }
         return .custom
+    }
+    private var showTaskPromptBinding: Binding<Bool> {
+        Binding(get: { preferences.settings.showTaskPrompt },
+                set: { preferences.settings.showTaskPrompt = $0 })
     }
 }

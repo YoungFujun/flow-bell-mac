@@ -73,6 +73,10 @@
 "Bell Sound" = "Bell Sound";
 "Micro break end cue" = "Micro break end cue";
 "Auto-start next focus after rest" = "Auto-start next focus after rest";
+"Prompt for task before focus" = "Prompt for task before focus";
+"What will you focus on?" = "What will you focus on?";
+"Write down a specific task..." = "Write down a specific task...";
+"Skip" = "Skip";
 "Accent Color" = "Accent Color";
 "Blocked Apps" = "Blocked Apps";
 "Not configured" = "Not configured";

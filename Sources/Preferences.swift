@@ -11,29 +11,35 @@ struct BlockedApp: Codable, Equatable, Hashable, Identifiable {
 enum AccentColorChoice: String, Codable, CaseIterable, Identifiable {
     case blue
     case green
-    case brown
-    case gray
+    case orange
+    case pink
     case purple
+    case teal
+    case indigo
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .blue:   "天蓝"
-        case .green:  "薄荷"
-        case .brown:  "珊瑚"
-        case .gray:   "薰衣草"
-        case .purple: "石板蓝"
+        case .blue:   "蓝"
+        case .green:  "绿"
+        case .orange: "橙"
+        case .pink:   "粉"
+        case .purple: "紫"
+        case .teal:   "青"
+        case .indigo: "靛"
         }
     }
 
     var color: Color {
         switch self {
-        case .blue:   Color(red: 0.129, green: 0.588, blue: 0.953) // 天蓝 #2196F3
-        case .green:  Color(red: 0.000, green: 0.749, blue: 0.647) // 薄荷绿 #00BFA5
-        case .brown:  Color(red: 1.000, green: 0.420, blue: 0.420) // 珊瑚橙 #FF6B6B
-        case .gray:   Color(red: 0.612, green: 0.639, blue: 0.953) // 薰衣草紫 #9C88FF
-        case .purple: Color(red: 0.369, green: 0.416, blue: 0.824) // 石板蓝 #5C6BC0
+        case .blue:   Color(red: 0.000, green: 0.478, blue: 1.000) // #007AFF
+        case .green:  Color(red: 0.204, green: 0.780, blue: 0.349) // #34C759
+        case .orange: Color(red: 1.000, green: 0.584, blue: 0.000) // #FF9500
+        case .pink:   Color(red: 1.000, green: 0.176, blue: 0.333) // #FF2D55
+        case .purple: Color(red: 0.686, green: 0.322, blue: 0.871) // #AF52DE
+        case .teal:   Color(red: 0.353, green: 0.784, blue: 0.980) // #5AC8FA
+        case .indigo: Color(red: 0.345, green: 0.337, blue: 0.839) // #5856D6
         }
     }
 }

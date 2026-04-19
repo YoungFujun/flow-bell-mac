@@ -4,7 +4,6 @@ import SwiftUI
 struct ContentView: View {
     private enum SettingsRoute {
         case main
-        case blockedApps
         case weekStats
     }
 
@@ -17,6 +16,7 @@ struct ContentView: View {
 
     @State private var durationExpanded = false
     @State private var soundExpanded = false
+    @State private var blockedAppsExpanded = false
 
     private var accent: Color { preferences.settings.accentColorChoice.color }
 
@@ -30,8 +30,6 @@ struct ContentView: View {
             switch settingsRoute {
             case .main:
                 settingsForm
-            case .blockedApps:
-                blockedAppsManager
             case .weekStats:
                 weekStatsView
             }
@@ -245,25 +243,9 @@ struct ContentView: View {
 
             Divider()
 
-            Button(action: { settingsRoute = .blockedApps }) {
-                HStack {
-                    Image(systemName: "apps.iphone.badge.plus")
-                        .foregroundStyle(.secondary)
-                        .frame(width: 16)
-                    Text("专注禁用 App")
-                        .foregroundStyle(Color(NSColor.labelColor))
-                    Spacer()
-                    Text("\(preferences.settings.blockedApps.count) 个")
-                        .foregroundStyle(.secondary)
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 11)
-                .contentShape(Rectangle())
+            collapsibleSection(title: "专注禁用 App", icon: "apps.iphone.badge.plus", isExpanded: $blockedAppsExpanded) {
+                blockedAppsContent
             }
-            .buttonStyle(.plain)
 
             Divider().padding(.leading, 20)
 
@@ -383,23 +365,13 @@ struct ContentView: View {
 
     // MARK: - Blocked apps
 
-    private var blockedAppsManager: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Button { settingsRoute = .main } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 11, weight: .semibold))
-                }
-                .buttonStyle(.borderless)
-                Text("专注禁用 App")
-                    .font(.system(size: 13, weight: .semibold))
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 14)
-
+    private var blockedAppsContent: some View {
+        VStack(spacing: 0) {
             TextField("搜索应用，例如 微信", text: $appSearchQuery)
                 .textFieldStyle(.roundedBorder)
                 .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(Color.primary.opacity(0.03))
 
             let suggestions = installedApps.search(appSearchQuery, excluding: preferences.settings.blockedApps)
             if !appSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !suggestions.isEmpty {
@@ -435,6 +407,9 @@ struct ContentView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.primary.opacity(0.03))
             } else {
                 VStack(spacing: 0) {
                     ForEach(preferences.settings.blockedApps) { app in

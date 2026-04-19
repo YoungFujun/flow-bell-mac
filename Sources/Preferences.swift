@@ -19,21 +19,21 @@ enum AccentColorChoice: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .blue:   "蓝"
-        case .green:  "绿"
-        case .brown:  "棕"
-        case .gray:   "灰"
-        case .purple: "紫"
+        case .blue:   "天蓝"
+        case .green:  "薄荷"
+        case .brown:  "珊瑚"
+        case .gray:   "薰衣草"
+        case .purple: "石板蓝"
         }
     }
 
     var color: Color {
         switch self {
-        case .blue:   Color(red: 0.290, green: 0.565, blue: 0.851)
-        case .green:  Color(red: 0.290, green: 0.486, blue: 0.349)
-        case .brown:  Color(red: 0.545, green: 0.451, blue: 0.333)
-        case .gray:   Color(red: 0.420, green: 0.420, blue: 0.420)
-        case .purple: Color(red: 0.482, green: 0.408, blue: 0.710)
+        case .blue:   Color(red: 0.129, green: 0.588, blue: 0.953) // 天蓝 #2196F3
+        case .green:  Color(red: 0.000, green: 0.749, blue: 0.647) // 薄荷绿 #00BFA5
+        case .brown:  Color(red: 1.000, green: 0.420, blue: 0.420) // 珊瑚橙 #FF6B6B
+        case .gray:   Color(red: 0.612, green: 0.639, blue: 0.953) // 薰衣草紫 #9C88FF
+        case .purple: Color(red: 0.369, green: 0.416, blue: 0.824) // 石板蓝 #5C6BC0
         }
     }
 }

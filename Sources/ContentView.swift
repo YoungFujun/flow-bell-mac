@@ -38,6 +38,7 @@ struct ContentView: View {
         }
         .background(Color.white.opacity(0.72))
         .background(.ultraThinMaterial)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     // MARK: - Header

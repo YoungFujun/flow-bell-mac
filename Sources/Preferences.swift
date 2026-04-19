@@ -8,6 +8,13 @@ struct BlockedApp: Codable, Equatable, Hashable, Identifiable {
     var id: String { bundleIdentifier }
 }
 
+struct SystemSound: Identifiable, Equatable {
+    let name: String
+    var id: String { name }
+
+    var displayName: String { name }
+}
+
 enum AccentColorChoice: String, Codable, CaseIterable, Identifiable {
     case systemBlue
     case sage
@@ -96,6 +103,18 @@ struct AppSettings: Codable, Equatable {
     var pingMinDuration: TimeInterval { pingMinMinutes * 60 }
     var pingMaxDuration: TimeInterval { max(pingMinMinutes, pingMaxMinutes) * 60 }
     var microBreakDuration: TimeInterval { microBreakSeconds }
+
+    static let availableSystemSounds: [SystemSound] = {
+        let soundsPath = "/System/Library/Sounds"
+        guard let files = try? FileManager.default.contentsOfDirectory(atPath: soundsPath) else {
+            return [SystemSound(name: "Glass")]
+        }
+        let soundNames = files
+            .filter { $0.hasSuffix(".aiff") }
+            .map { $0.replacingOccurrences(of: ".aiff", with: "") }
+            .sorted()
+        return soundNames.map { SystemSound(name: $0) }
+    }()
 }
 
 final class PreferencesStore: ObservableObject {

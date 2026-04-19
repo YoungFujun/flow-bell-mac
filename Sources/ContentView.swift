@@ -262,10 +262,9 @@ struct ContentView: View {
             ) {
                 formRow("提示音") {
                     Picker("", selection: soundBinding) {
-                        Text("Glass").tag("Glass")
-                        Text("Hero").tag("Hero")
-                        Text("Submarine").tag("Submarine")
-                        Text("Funk").tag("Funk")
+                        ForEach(AppSettings.availableSystemSounds) { sound in
+                            Text(sound.displayName).tag(sound.name)
+                        }
                     }
                     .tint(accent)
                     .frame(width: 170)

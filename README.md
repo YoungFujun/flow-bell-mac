@@ -20,11 +20,11 @@
 
 当你知道铃声会在某个固定时间响起，你会不自觉地倒计时等它。但如果你完全不知道它什么时候来，你就没法等——只能继续工作。
 
-这不是直觉，行为心理学研究早已证实：**不可预测的提示比固定提示更能维持持续的注意力**，因为大脑无法提前对它建立期待和应对。Flow Bell 把这个原理用在休息上：铃声随机，所以它不会被期待，不会提前打断你的思路。
+这一逻辑来自行为心理学中的可变比率强化原理：**不可预测的信号比固定信号更难被预期**，大脑无法提前对它建立倒计时期待，因此干扰更小。Flow Bell 把这个原理用在休息上：铃声随机，所以它不会被期待，不会提前打断你的思路。
 
 ### 为什么是 10 秒闭眼
 
-长时间专注会持续消耗大脑的认知资源，神经科学研究发现，哪怕极短暂的「脱离」——闭眼、停止信息输入——就能让大脑的休息网络短暂激活，延缓疲劳累积的速度。10 秒不足以让你失去工作状态，却足以给眼睛和注意力一次微小的重置。
+长时间专注会持续消耗大脑的认知资源，研究表明，即使极短暂的感官输入中断也有助于延缓认知疲劳的累积速度。10 秒不足以让你失去工作状态，却足以给眼睛和注意力一次微小的重置。
 
 ### 整体节奏
 
@@ -34,6 +34,15 @@
 - **20 分钟真正休息**：专注结束后，置顶浮窗强制离开屏幕，完成深度恢复
 
 最终形成的节奏不像节拍器，而更像自然的呼吸。
+
+### 真正起作用的是什么
+
+随机铃声解决的是「被打断感」——让休息悄悄发生，而不破坏心流。但对效率影响更直接的，是另外两个设计：
+
+- **置顶浮窗强制离屏**：休息阶段浮窗始终置顶，让你真正停下来，而不是「休息」时继续盯着屏幕。这是恢复认知资源最有效的部分。
+- **App 拦截**：专注期间自动隐藏干扰应用，把环境管理的决策成本降到零。
+
+如果你容易被手机或其他应用分心，App 拦截可能是这个 app 里对你最实用的功能。
 
 ---
 
@@ -157,13 +166,22 @@ MIT
 
 Fixed time blocks — whether 25 minutes or 52 — are a popular way to structure work. They're effective. But the fixed rhythm creates a subtle problem: **you start anticipating the break**. In the final minutes, your brain is already winding down; when the bell rings, you need time to rebuild momentum. The issue isn't the length of the block — it's the predictability.
 
-Flow Bell works differently. Because the bell arrives at a random interval, you can't countdown to it — there's nothing to wait for. Behavioral psychology has long shown that unpredictable cues sustain attention better than fixed ones: the brain stays engaged precisely because it can't predict what comes next.
+Flow Bell works differently. Because the bell arrives at a random interval, you can't countdown to it — there's nothing to wait for. This logic comes from the variable ratio reinforcement principle in behavioral psychology: **unpredictable signals are harder to anticipate than fixed ones**. The brain can't form a countdown expectation, so the interference is smaller. Flow Bell applies this principle to rest: the bell is random, so it isn't anticipated and won't interrupt your train of thought.
 
-When the bell rings, you close your eyes for 10 seconds. That's it. Brief enough that you don't lose your train of thought; enough to give your visual system and attention a small reset before continuing.
+Extended focus continuously depletes cognitive resources. Research indicates that even brief interruptions of sensory input help slow the accumulation of cognitive fatigue. When the bell rings, you close your eyes for 10 seconds. That's it — brief enough that you don't lose your train of thought, yet enough to give your eyes and attention a small reset.
 
 At the end of the session, a 20-minute rest begins — a floating window that stays on top of everything, so you actually step away from the screen.
 
 The result feels less like a metronome and more like natural breathing.
+
+### What Really Makes It Work
+
+The random bell addresses the "interrupted feeling" — letting rest happen quietly without breaking flow. But what affects efficiency more directly are two other design features:
+
+- **Always-on-top rest overlay**: During rest, the overlay stays on top of all windows, forcing you to actually step away rather than staring at the screen during "rest." This is the most effective part for cognitive recovery.
+- **App blocking**: During focus sessions, distracting apps are automatically hidden, reducing the decision cost of environment management.
+
+If you're prone to distraction from your phone or other apps, App blocking may be the most practical feature for you.
 
 ### Features
 

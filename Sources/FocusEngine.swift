@@ -202,11 +202,39 @@ final class FocusEngine: ObservableObject {
         secondsRemaining = settings.breakDuration
         notify(title: "Rest", body: "\(Int(settings.breakMinutes)) 分钟恢复休息开始。")
         play(named: "Hero", volumeGain: 2.0)
-        restOverlayController.show(secondsRemaining: secondsRemaining, accentColor: settings.accentColorChoice.color) { [weak self] in
-            Task { @MainActor in
-                self?.finishRestSession()
+        restOverlayController.show(
+            secondsRemaining: secondsRemaining,
+            accentColor: settings.accentColorChoice.color,
+            onSkip: { [weak self] in
+                Task { @MainActor in
+                    self?.finishRestToIdle()
+                }
+            },
+            onNextFocus: { [weak self] in
+                Task { @MainActor in
+                    self?.finishRestAndStartNextFocus()
+                }
             }
-        }
+        )
+    }
+
+    private func finishRestToIdle() {
+        restOverlayController.close()
+        phase = .idle
+        isRunning = false
+        phaseEndDate = nil
+        nextPingDate = nil
+        secondsRemaining = 0
+        activePromptText = "休息结束，可以开始下一轮。"
+        promptEndsAt = Date().addingTimeInterval(8)
+        isMicroBreakPromptActive = false
+        notify(title: "Ready", body: "休息结束，可以开始下一轮专注。")
+        play(named: "Glass", volumeGain: 2.0)
+    }
+
+    private func finishRestAndStartNextFocus() {
+        restOverlayController.close()
+        startFocusSession()
     }
 
     private func finishRestSession() {
@@ -340,6 +368,9 @@ final class FocusEngine: ObservableObject {
         promptEndsAt = Date().addingTimeInterval(settings.microBreakDuration)
         isMicroBreakPromptActive = true
         play(named: settings.soundName, volumeGain: 2.0)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            self.play(named: self.settings.soundName, volumeGain: 2.0)
+        }
         notify(title: "随机提示音", body: "闭眼休息 \(Int(settings.microBreakSeconds)) 秒。")
         microBreakNoticeController.show(seconds: settings.microBreakSeconds, accentColor: settings.accentColorChoice.color)
     }

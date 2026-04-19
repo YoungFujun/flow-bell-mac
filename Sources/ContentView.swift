@@ -199,7 +199,7 @@ struct ContentView: View {
 
     private var statsRow: some View {
         HStack(spacing: 10) {
-            statPill(title: "完成轮次", value: "\(engine.completedFocusSessions)")
+            statPill(title: "今日轮次", value: "\(dailyStats.sessionsToday)")
             statPill(title: "今日专注", value: todayFocusLabel)
         }
     }
@@ -232,7 +232,7 @@ struct ContentView: View {
 
     private var durationSection: some View {
         collapsibleSection(
-            title: "时长",
+            title: "时长设置",
             icon: "timer",
             isExpanded: $durationExpanded,
             scrollSectionID: .durationSection,

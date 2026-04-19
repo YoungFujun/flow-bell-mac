@@ -13,7 +13,7 @@ final class RestOverlayController {
     private static let miniPanelWidth: CGFloat = 160
     private static let miniPanelHeight: CGFloat = 56
 
-    func show(secondsRemaining: TimeInterval, accentColor: Color = .accentColor, onSkip: @escaping () -> Void) {
+    func show(secondsRemaining: TimeInterval, accentColor: Color = .accentColor, onSkip: @escaping () -> Void, onNextFocus: @escaping () -> Void) {
         model.secondsRemaining = secondsRemaining
         model.isMinimized = false
         model.accentColor = accentColor
@@ -21,6 +21,10 @@ final class RestOverlayController {
         model.onMinimize = { [weak self] in self?.minimize() }
         model.onSkip = { [weak self] in
             onSkip()
+            self?.close()
+        }
+        model.onNextFocus = { [weak self] in
+            onNextFocus()
             self?.close()
         }
         model.onExpand = { [weak self] in self?.expand() }
@@ -123,6 +127,7 @@ final class RestOverlayModel: ObservableObject {
     var onClose: (() -> Void)?
     var onMinimize: (() -> Void)?
     var onSkip: (() -> Void)?
+    var onNextFocus: (() -> Void)?
     var onExpand: (() -> Void)?
 
     var timeText: String {
@@ -146,6 +151,7 @@ final class RestOverlayModel: ObservableObject {
         onClose = nil
         onMinimize = nil
         onSkip = nil
+        onNextFocus = nil
         onExpand = nil
     }
 }
@@ -154,54 +160,67 @@ struct RestOverlayView: View {
     @ObservedObject var model: RestOverlayModel
 
     var body: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 10) {
+        VStack(spacing: 20) {
+            // 关闭按钮保持在右上角
+            HStack {
+                Spacer()
                 Button(action: { model.onClose?() }) {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 16))
                         .foregroundStyle(Color.white.opacity(0.5))
                 }
                 .buttonStyle(.plain)
+            }
 
+            VStack(spacing: 8) {
                 Image(systemName: "moon.zzz.fill")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(Color.white.opacity(0.72))
+
                 Text("休息一下")
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(Color.white.opacity(0.72))
-                Spacer()
             }
 
             Text(model.timeText)
                 .font(.system(size: 64, weight: .semibold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(.white)
-                .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text("离开屏幕、放松眼睛。")
+            Text("离开屏幕、放松眼睛")
                 .font(.system(size: 13))
                 .foregroundStyle(Color.white.opacity(0.55))
-                .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
                 Button("最小化") {
                     model.onMinimize?()
                 }
                 .buttonStyle(.plain)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Color.white.opacity(0.6))
-                .padding(.horizontal, 12)
+                .frame(width: 72)
                 .padding(.vertical, 6)
                 .background(Color.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
-
-                Spacer()
 
                 Button("提前结束") {
                     model.onSkip?()
                 }
                 .buttonStyle(.plain)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Color.white.opacity(0.6))
+                .frame(width: 72)
+                .padding(.vertical, 6)
+                .background(Color.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
+
+                Button("下一轮专注") {
+                    model.onNextFocus?()
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Color.white.opacity(0.6))
+                .frame(width: 72)
+                .padding(.vertical, 6)
+                .background(Color.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
             }
         }
         .padding(24)

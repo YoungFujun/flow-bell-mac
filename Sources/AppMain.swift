@@ -21,9 +21,11 @@ struct FlowRandomBellApp: App {
                 .onAppear {
                     engine.configure(preferences: preferences)
                     engine.dailyStats = dailyStats
+                    L10n.configure(language: preferences.settings.languageChoice)
                 }
                 .onReceive(preferences.$settings.removeDuplicates()) { updated in
                     engine.apply(settings: updated)
+                    L10n.configure(language: updated.languageChoice)
                 }
         } label: {
             MenuBarLabelView(

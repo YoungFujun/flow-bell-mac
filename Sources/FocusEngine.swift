@@ -57,37 +57,37 @@ final class FocusEngine: ObservableObject {
     var phaseCaption: String {
         switch (phase, isRunning) {
         case (.idle, _):
-            return "READY"
+            return L10n.readyUpper
         case (.focus, true):
-            return "FOCUS"
+            return L10n.focusUpper
         case (.focus, false):
-            return "FOCUS PAUSED"
+            return L10n.focusPaused
         case (.rest, true):
-            return "BREAK"
+            return L10n.breakUpper
         case (.rest, false):
-            return "BREAK PAUSED"
+            return L10n.breakPaused
         }
     }
 
     var helperLine: String {
         switch phase {
         case .idle:
-            return "开始一轮专注。专注中会在随机区间内响起系统提示音。"
+            return L10n.helperIdle()
         case .focus:
-            return "保持工作流不断开，只在提示音响起时短暂停 \(Int(settings.microBreakSeconds)) 秒。"
+            return L10n.helperFocus(seconds: Int(settings.microBreakSeconds))
         case .rest:
-            return "现在进入真正的休息时间，全屏倒计时已接管屏幕。"
+            return L10n.helperRest
         }
     }
 
     var primaryButtonLabel: String {
         switch (phase, isRunning) {
         case (.idle, _):
-            return "开始"
+            return L10n.start
         case (_, true):
-            return "进行中"
+            return L10n.inProgress
         case (_, false):
-            return "继续"
+            return L10n.resume
         }
     }
 
@@ -200,7 +200,7 @@ final class FocusEngine: ObservableObject {
         nextPingDate = nil
         phaseEndDate = Date().addingTimeInterval(settings.breakDuration)
         secondsRemaining = settings.breakDuration
-        notify(title: "Rest", body: "\(Int(settings.breakMinutes)) 分钟恢复休息开始。")
+        notify(title: L10n.rest, body: L10n.restStarted(minutes: Int(settings.breakMinutes)))
         play(named: "Hero", volumeGain: 2.0)
         restOverlayController.show(
             secondsRemaining: secondsRemaining,
@@ -225,10 +225,10 @@ final class FocusEngine: ObservableObject {
         phaseEndDate = nil
         nextPingDate = nil
         secondsRemaining = 0
-        activePromptText = "休息结束，可以开始下一轮。"
+        activePromptText = L10n.restEnded
         promptEndsAt = Date().addingTimeInterval(8)
         isMicroBreakPromptActive = false
-        notify(title: "Ready", body: "休息结束，可以开始下一轮专注。")
+        notify(title: L10n.ready, body: L10n.restEnded)
         play(named: "Glass", volumeGain: 2.0)
     }
 
@@ -248,10 +248,10 @@ final class FocusEngine: ObservableObject {
             phaseEndDate = nil
             nextPingDate = nil
             secondsRemaining = 0
-            activePromptText = "休息结束，可以开始下一轮。"
+            activePromptText = L10n.restEnded
             promptEndsAt = Date().addingTimeInterval(8)
             isMicroBreakPromptActive = false
-            notify(title: "Ready", body: "休息结束，可以开始下一轮专注。")
+            notify(title: L10n.ready, body: L10n.restEnded)
             play(named: "Glass", volumeGain: 2.0)
         }
     }
@@ -364,14 +364,14 @@ final class FocusEngine: ObservableObject {
 
     private func triggerPing() {
         pingCount += 1
-        activePromptText = "闭眼休息 \(Int(settings.microBreakSeconds)) 秒，然后继续。"
+        activePromptText = L10n.closeYourEyes(seconds: Int(settings.microBreakSeconds)) + " " + L10n.resume + "。"
         promptEndsAt = Date().addingTimeInterval(settings.microBreakDuration)
         isMicroBreakPromptActive = true
         play(named: settings.soundName, volumeGain: 2.0)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             self.play(named: self.settings.soundName, volumeGain: 2.0)
         }
-        notify(title: "随机提示音", body: "闭眼休息 \(Int(settings.microBreakSeconds)) 秒。")
+        notify(title: L10n.randomBell, body: L10n.closeYourEyes(seconds: Int(settings.microBreakSeconds)))
         microBreakNoticeController.show(seconds: settings.microBreakSeconds, accentColor: settings.accentColorChoice.color)
     }
 
@@ -380,7 +380,7 @@ final class FocusEngine: ObservableObject {
             isMicroBreakPromptActive = false
             microBreakNoticeController.close()
             if settings.microBreakEndCueEnabled, phase == .focus {
-                activePromptText = "回到专注。"
+                activePromptText = L10n.backToFocus
                 promptEndsAt = now.addingTimeInterval(1.6)
                 play(named: "Glass", volumeGain: 1.0)
                 return
@@ -467,7 +467,7 @@ final class FocusEngine: ObservableObject {
         }
 
         blockedNoticeLastShownAt[bundleID] = now
-        let appName = app.localizedName ?? "该应用"
+        let appName = app.localizedName ?? L10n.thisApp
         blockNoticeController.show(appName: appName, accentColor: settings.accentColorChoice.color) { [weak self] in
             Task { @MainActor in
                 self?.allowBlockedAppTemporarily(bundleID: bundleID)
@@ -572,34 +572,34 @@ final class FocusEngine: ObservableObject {
 
     func nextPingLabel() -> String {
         if isMicroBreakPromptActive {
-            return "微休息进行中"
+            return L10n.microBreakInProgress
         }
         guard phase == .focus else {
             return ""
         }
         guard isRunning else {
-            return "随机提示已暂停"
+            return L10n.randomBellPaused
         }
         guard nextPingDate != nil else {
-            return "本轮后段不再安排新的随机提示"
+            return L10n.noNewBellScheduled
         }
-        return "随机提示进行中：下一次将在 \(pingWindowLabel()) 内出现"
+        return L10n.randomBellActive(range: pingWindowLabel())
     }
 
     private func pingWindowLabel() -> String {
         let minText = intervalText(settings.pingMinMinutes)
         let maxText = intervalText(settings.pingMaxMinutes)
         if minText == maxText {
-            return "\(minText) 左右"
+            return L10n.aroundTime(time: minText)
         }
-        return "\(minText) 到 \(maxText)"
+        return L10n.timeRange(min: minText, max: maxText)
     }
 
     private func intervalText(_ value: Double) -> String {
         if value.rounded() == value {
-            return "\(Int(value)) 分钟"
+            return L10n.minutesInt(minutes: Int(value))
         }
-        return String(format: "%.1f 分钟", value)
+        return L10n.minutesFloat(minutes: value)
     }
 
     private func shortTime(_ seconds: TimeInterval) -> String {

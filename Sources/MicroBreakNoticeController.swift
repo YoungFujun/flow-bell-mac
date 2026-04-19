@@ -57,7 +57,7 @@ final class MicroBreakNoticeModel: ObservableObject {
 
     var countdownText: String {
         let s = max(0, Int(secondsRemaining.rounded(.up)))
-        return "\(s)"
+        return L10n.secondsLabel(seconds: s)
     }
 }
 
@@ -71,7 +71,7 @@ private struct MicroBreakNoticeView: View {
                 .foregroundStyle(model.accentColor)
                 .frame(width: 20)
 
-            Text("闭眼休息 \(model.countdownText) 秒")
+            Text(L10n.closeEyesRest(seconds: Int(model.secondsRemaining.rounded(.up))))
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.primary)
 

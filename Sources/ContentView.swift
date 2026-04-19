@@ -45,6 +45,7 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, alignment: .top)
         .frame(height: panelHeight, alignment: .top)
         .background(Color(NSColor.windowBackgroundColor))
+        .id(preferences.settings.languageChoice) // Force UI refresh when language changes
     }
 
     private var homeContent: some View {
@@ -106,7 +107,7 @@ struct ContentView: View {
     // 菜单栏模式选择，放在 header 和 session 之间
     private var menuBarPickerRow: some View {
         HStack {
-            Text("菜单栏")
+            Text(L10n.menuBar)
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             Spacer()
@@ -125,7 +126,7 @@ struct ContentView: View {
 
     private var presetRow: some View {
         HStack {
-            Text("预设")
+            Text(L10n.preset)
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             Spacer()
@@ -172,9 +173,9 @@ struct ContentView: View {
         HStack(spacing: 10) {
             actionButton(label: engine.primaryButtonLabel, action: { engine.primaryAction() },
                          prominent: true, disabled: !engine.canPrimaryAction)
-            actionButton(label: "暂停", action: { engine.pauseAction() },
+            actionButton(label: L10n.pause, action: { engine.pauseAction() },
                          prominent: false, disabled: !engine.canPause)
-            actionButton(label: "重置", action: { engine.stop() },
+            actionButton(label: L10n.reset, action: { engine.stop() },
                          prominent: false, disabled: !engine.canReset)
         }
     }
@@ -199,8 +200,8 @@ struct ContentView: View {
 
     private var statsRow: some View {
         HStack(spacing: 10) {
-            statPill(title: "今日轮次", value: "\(dailyStats.sessionsToday)")
-            statPill(title: "今日专注", value: todayFocusLabel)
+            statPill(title: L10n.todaySessions, value: "\(dailyStats.sessionsToday)")
+            statPill(title: L10n.todayFocus, value: todayFocusLabel)
         }
     }
 
@@ -232,21 +233,21 @@ struct ContentView: View {
 
     private var durationSection: some View {
         collapsibleSection(
-            title: "时长设置",
+            title: L10n.durationSettings,
             icon: "timer",
             isExpanded: $durationExpanded,
             scrollSectionID: .durationSection,
             onToggle: handleSectionToggle
         ) {
-            formStepperRow("专注时长", value: focusBinding, range: 15...180, step: 5, suffix: "分钟")
+            formStepperRow(L10n.focusDuration, value: focusBinding, range: 15...180, step: 5, suffix: L10n.minutes)
             formDivider()
-            formStepperRow("休息时长", value: breakBinding, range: 5...60, step: 5, suffix: "分钟")
+            formStepperRow(L10n.restDuration, value: breakBinding, range: 5...60, step: 5, suffix: L10n.minutes)
             formDivider()
-            formStepperRow("随机最短", value: pingMinBinding, range: 1...15, step: 1, suffix: "分钟")
+            formStepperRow(L10n.randomMin, value: pingMinBinding, range: 1...15, step: 1, suffix: L10n.minutes)
             formDivider()
-            formStepperRow("随机最长", value: pingMaxBinding, range: 1...20, step: 1, suffix: "分钟")
+            formStepperRow(L10n.randomMax, value: pingMaxBinding, range: 1...20, step: 1, suffix: L10n.minutes)
             formDivider()
-            formStepperRow("微休息", value: microBreakBinding, range: 5...30, step: 1, suffix: "秒")
+            formStepperRow(L10n.microBreak, value: microBreakBinding, range: 5...30, step: 1, suffix: L10n.seconds)
         }
         .font(.system(size: 13))
     }
@@ -254,13 +255,13 @@ struct ContentView: View {
     private var settingsForm: some View {
         VStack(spacing: 0) {
             collapsibleSection(
-                title: "声音与行为",
+                title: L10n.soundAndBehavior,
                 icon: "bell",
                 isExpanded: $soundExpanded,
                 scrollSectionID: .soundSection,
                 onToggle: handleSectionToggle
             ) {
-                formRow("提示音") {
+                formRow(L10n.bellSound) {
                     Picker("", selection: soundBinding) {
                         ForEach(AppSettings.availableSystemSounds) { sound in
                             Text(sound.displayName).tag(sound.name)
@@ -275,11 +276,21 @@ struct ContentView: View {
                     }
                 }
                 formDivider()
-                formToggleRow("微休息结束提示音", isOn: microBreakEndCueBinding)
+                formRow(L10n.languageLabel) {
+                    Picker("", selection: languageBinding) {
+                        ForEach(LanguageChoice.allCases) { choice in
+                            Text(choice.title).tag(choice)
+                        }
+                    }
+                    .tint(accent)
+                    .frame(width: 170)
+                }
                 formDivider()
-                formToggleRow("休息结束后自动开始下一轮", isOn: autoStartBinding)
+                formToggleRow(L10n.microBreakEndCue, isOn: microBreakEndCueBinding)
                 formDivider()
-                formRow("主题色") {
+                formToggleRow(L10n.autoStartNext, isOn: autoStartBinding)
+                formDivider()
+                formRow(L10n.accentColor) {
                     HStack(spacing: 8) {
                         ForEach(AccentColorChoice.allCases) { choice in
                             let selected = preferences.settings.accentColorChoice == choice
@@ -302,9 +313,9 @@ struct ContentView: View {
             Divider()
 
             collapsibleSection(
-                title: "专注禁用 App",
+                title: L10n.blockedApps,
                 icon: "apps.iphone.badge.plus",
-                subtitle: preferences.settings.blockedApps.isEmpty ? "未设置" : "\(preferences.settings.blockedApps.count) 个",
+                subtitle: preferences.settings.blockedApps.isEmpty ? L10n.notConfigured : L10n.blockedAppsCount(count: preferences.settings.blockedApps.count),
                 isExpanded: $blockedAppsExpanded,
                 scrollSectionID: .blockedAppsSection,
                 onToggle: handleSectionToggle
@@ -432,7 +443,7 @@ struct ContentView: View {
 
     private var blockedAppsContent: some View {
         VStack(spacing: 0) {
-            TextField("搜索应用，例如 微信", text: $appSearchQuery)
+            TextField(L10n.searchApps, text: $appSearchQuery)
                 .textFieldStyle(.roundedBorder)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 10)
@@ -473,7 +484,7 @@ struct ContentView: View {
             }
 
             if preferences.settings.blockedApps.isEmpty {
-                Text("未设置禁用列表，专注期间允许打开任何 App。")
+                Text(L10n.noBlockedList)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 20)
@@ -498,19 +509,19 @@ struct ContentView: View {
                             Spacer()
                             HStack(spacing: 12) {
                                 if engine.temporarilyAllowedBundleIDs.contains(app.bundleIdentifier) {
-                                    Text("已放行")
+                                    Text(L10n.allowed)
                                         .font(.system(size: 11, weight: .medium))
                                         .foregroundStyle(accent)
-                                    smallActionButton("取消") {
+                                    smallActionButton(L10n.cancel) {
                                         engine.revokeTemporaryAllowance(bundleID: app.bundleIdentifier)
                                     }
                                 } else {
-                                    smallActionButton("放行 5 分", prominent: true) {
+                                    smallActionButton(L10n.allow5Min, prominent: true) {
                                         engine.allowBlockedAppTemporarily(bundleID: app.bundleIdentifier)
                                     }
                                 }
 
-                                smallActionButton("移除") {
+                                smallActionButton(L10n.remove) {
                                     engine.revokeTemporaryAllowance(bundleID: app.bundleIdentifier)
                                     preferences.settings.blockedApps.removeAll { $0.bundleIdentifier == app.bundleIdentifier }
                                 }
@@ -535,7 +546,7 @@ struct ContentView: View {
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
             Spacer()
-            Button("退出") { NSApplication.shared.terminate(nil) }
+            Button(L10n.quit) { NSApplication.shared.terminate(nil) }
                 .buttonStyle(.plain)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
@@ -671,6 +682,10 @@ struct ContentView: View {
     private var microBreakEndCueBinding: Binding<Bool> {
         Binding(get: { preferences.settings.microBreakEndCueEnabled },
                 set: { preferences.settings.microBreakEndCueEnabled = $0 })
+    }
+    private var languageBinding: Binding<LanguageChoice> {
+        Binding(get: { preferences.settings.languageChoice },
+                set: { preferences.settings.languageChoice = $0 })
     }
     private var inferredPreset: FocusPresetChoice {
         let s = preferences.settings

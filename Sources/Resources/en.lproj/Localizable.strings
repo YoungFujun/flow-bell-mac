@@ -1,0 +1,108 @@
+/* FocusEngine states */
+"Ready" = "Ready";
+"Focus" = "Focus";
+"Rest" = "Rest";
+"READY" = "READY";
+"FOCUS" = "FOCUS";
+"FOCUS PAUSED" = "FOCUS PAUSED";
+"BREAK" = "BREAK";
+"BREAK PAUSED" = "BREAK PAUSED";
+"Flow Bell" = "Flow Bell";
+
+/* FocusEngine helper lines */
+"Start a focus session. Random bell cues will ring at irregular intervals." = "Start a focus session. Random bell cues will ring at irregular intervals.";
+"Keep your flow uninterrupted. Pause briefly for %d seconds when the bell rings." = "Keep your flow uninterrupted. Pause briefly for %d seconds when the bell rings.";
+"Now entering real rest time. Full-screen countdown has taken over your screen." = "Now entering real rest time. Full-screen countdown has taken over your screen.";
+"In Progress" = "In Progress";
+"Resume" = "Resume";
+"Pause" = "Pause";
+"Reset" = "Reset";
+
+/* Notifications */
+"Rest" = "Rest";
+"%d-minute recovery rest has started." = "%d-minute recovery rest has started.";
+"Random Bell" = "Random Bell";
+"Close your eyes and rest for %d seconds." = "Close your eyes and rest for %d seconds.";
+"Back to focus." = "Back to focus.";
+"Ready" = "Ready";
+"Rest ended. You can start a new focus session." = "Rest ended. You can start a new focus session.";
+
+/* Rest overlay */
+"Rest a while" = "Rest a while";
+"Step away from screen, relax your eyes" = "Step away from screen, relax your eyes";
+"Minimize" = "Minimize";
+"End Rest" = "End Rest";
+"Next Focus" = "Next Focus";
+"Rest %s" = "Rest %s";
+
+/* Micro break */
+"Close eyes and rest %d seconds" = "Close eyes and rest %d seconds";
+"%ds" = "%ds";
+
+/* Block notice */
+"Allowed for 5 min" = "Allowed for 5 min";
+"Blocked: %s" = "Blocked: %s";
+"Allow" = "Allow";
+"Remove" = "Remove";
+
+/* ContentView */
+"Menu Bar" = "Menu Bar";
+"Digital Clock" = "Digital Clock";
+"Progress Ring" = "Progress Ring";
+"Preset" = "Preset";
+"Custom" = "Custom";
+"Flow 90/20" = "Flow 90/20";
+"Pomodoro 30/5" = "Pomodoro 30/5";
+"Focus 50/10" = "Focus 50/10";
+"Start" = "Start";
+"Today Sessions" = "Today Sessions";
+"Today Focus" = "Today Focus";
+"%dm" = "%dm";
+"%dh%dm" = "%dh%dm";
+
+/* Settings sections */
+"Duration Settings" = "Duration Settings";
+"Focus Duration" = "Focus Duration";
+"Rest Duration" = "Rest Duration";
+"Random Min" = "Random Min";
+"Random Max" = "Random Max";
+"Micro Break" = "Micro Break";
+"minutes" = "minutes";
+"seconds" = "seconds";
+"Sound & Behavior" = "Sound & Behavior";
+"Bell Sound" = "Bell Sound";
+"Micro break end cue" = "Micro break end cue";
+"Auto-start next focus after rest" = "Auto-start next focus after rest";
+"Accent Color" = "Accent Color";
+"Blocked Apps" = "Blocked Apps";
+"Not configured" = "Not configured";
+"%d apps" = "%d apps";
+"Search apps, e.g. WeChat" = "Search apps, e.g. WeChat";
+"No blocked list set. Any app can be opened during focus." = "No blocked list set. Any app can be opened during focus.";
+"Allowed" = "Allowed";
+"Cancel" = "Cancel";
+"Allow 5 min" = "Allow 5 min";
+"Remove" = "Remove";
+"Quit" = "Quit";
+
+/* Colors */
+"Classic Blue" = "Classic Blue";
+"Sage" = "Sage";
+"Sierra Blue" = "Sierra Blue";
+"Lavender" = "Lavender";
+"Rose" = "Rose";
+"Titanium" = "Titanium";
+"Starlight" = "Starlight";
+
+/* Micro break state */
+"Micro break in progress" = "Micro break in progress";
+"Random bell paused" = "Random bell paused";
+"No new random bell scheduled for this session" = "No new random bell scheduled for this session";
+"Random bell active: next cue within %s" = "Random bell active: next cue within %s";
+"around %s" = "around %s";
+"%s to %s" = "%s to %s";
+"%d minutes" = "%d minutes";
+"%.1f minutes" = "%.1f minutes";
+
+/* Footer */
+"Flow Bell" = "Flow Bell";

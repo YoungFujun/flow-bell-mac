@@ -9,7 +9,7 @@ final class BlockNoticeController {
 
     func show(appName: String, accentColor: Color = .accentColor, onAllowTemporarily: (() -> Void)? = nil) {
         model.appName = appName
-        model.actionTitle = onAllowTemporarily == nil ? nil : "放行 5 分钟"
+        model.actionTitle = onAllowTemporarily == nil ? nil : L10n.allow5Min
         model.accentColor = accentColor
         model.action = { [weak self] in
             onAllowTemporarily?()
@@ -78,7 +78,7 @@ private struct BlockNoticeView: View {
                 .foregroundStyle(model.accentColor)
                 .frame(width: 20)
 
-            Text("已拦截 \(model.appName)")
+            Text(L10n.blockedAppName(name: model.appName))
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.primary)
 

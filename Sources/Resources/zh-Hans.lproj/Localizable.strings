@@ -1,0 +1,105 @@
+/* FocusEngine states */
+"Ready" = "准备";
+"Focus" = "专注";
+"Rest" = "休息";
+"READY" = "准备";
+"FOCUS" = "专注中";
+"FOCUS PAUSED" = "专注暂停";
+"BREAK" = "休息中";
+"BREAK PAUSED" = "休息暂停";
+"Flow Bell" = "Flow Bell";
+
+/* FocusEngine helper lines */
+"Start a focus session. Random bell cues will ring at irregular intervals." = "开始一轮专注。专注中会在随机区间内响起系统提示音。";
+"Keep your flow uninterrupted. Pause briefly for %d seconds when the bell rings." = "保持工作流不断开，只在提示音响起时短暂停 %d 秒。";
+"Now entering real rest time. Full-screen countdown has taken over your screen." = "现在进入真正的休息时间，全屏倒计时已接管屏幕。";
+"In Progress" = "进行中";
+"Resume" = "继续";
+"Pause" = "暂停";
+"Reset" = "重置";
+
+/* Notifications */
+"%d-minute recovery rest has started." = "%d 分钟恢复休息开始。";
+"Random Bell" = "随机提示音";
+"Close your eyes and rest for %d seconds." = "闭眼休息 %d 秒。";
+"Back to focus." = "回到专注。";
+"Rest ended. You can start a new focus session." = "休息结束，可以开始下一轮专注。";
+
+/* Rest overlay */
+"Rest a while" = "休息一下";
+"Step away from screen, relax your eyes" = "离开屏幕、放松眼睛";
+"Minimize" = "最小化";
+"End Rest" = "提前结束";
+"Next Focus" = "下一轮专注";
+"Rest %s" = "休息 %s";
+
+/* Micro break */
+"Close eyes and rest %d seconds" = "闭眼休息 %d 秒";
+"%ds" = "%d秒";
+
+/* Block notice */
+"Allowed for 5 min" = "已放行";
+"Blocked: %s" = "已拦截 %s";
+"Allow" = "取消";
+"Allow 5 min" = "放行 5 分";
+"Remove" = "移除";
+
+/* ContentView */
+"Menu Bar" = "菜单栏";
+"Digital Clock" = "数字时钟";
+"Progress Ring" = "圆环盈缺";
+"Preset" = "预设";
+"Custom" = "手动设置";
+"Flow 90/20" = "Flow 90/20";
+"Pomodoro 30/5" = "Pomodoro 30/5";
+"Focus 50/10" = "Focus 50/10";
+"Start" = "开始";
+"Today Sessions" = "今日轮次";
+"Today Focus" = "今日专注";
+
+/* Settings sections */
+"Duration Settings" = "时长设置";
+"Focus Duration" = "专注时长";
+"Rest Duration" = "休息时长";
+"Random Min" = "随机最短";
+"Random Max" = "随机最长";
+"Micro Break" = "微休息";
+"minutes" = "分钟";
+"seconds" = "秒";
+"Sound & Behavior" = "声音与行为";
+"Bell Sound" = "提示音";
+"Micro break end cue" = "微休息结束提示音";
+"Auto-start next focus after rest" = "休息结束后自动开始下一轮";
+"Accent Color" = "主题色";
+"Blocked Apps" = "专注禁用 App";
+"Not configured" = "未设置";
+"%d apps" = "%d 个";
+"Search apps, e.g. WeChat" = "搜索应用，例如 微信";
+"No blocked list set. Any app can be opened during focus." = "未设置禁用列表，专注期间允许打开任何 App。";
+"Allowed" = "已放行";
+"Cancel" = "取消";
+"Quit" = "退出";
+
+/* Colors */
+"Classic Blue" = "经典蓝";
+"Sage" = "鼠尾草";
+"Sierra Blue" = "山脉蓝";
+"Lavender" = "薰衣草";
+"Rose" = "玫瑰";
+"Titanium" = "钛金";
+"Starlight" = "星光";
+
+/* Micro break state */
+"Micro break in progress" = "微休息进行中";
+"Random bell paused" = "随机提示已暂停";
+"No new random bell scheduled for this session" = "本轮后段不再安排新的随机提示";
+"Random bell active: next cue within %s" = "随机提示进行中：下一次将在 %s 内出现";
+"around %s" = "%s 左右";
+"%s to %s" = "%s 到 %s";
+"%d minutes" = "%d 分钟";
+"%.1f minutes" = "%.1f 分钟";
+
+/* Language choice */
+"Language" = "语言";
+"Chinese" = "中文";
+"English" = "英文";

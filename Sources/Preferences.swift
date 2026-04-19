@@ -15,6 +15,27 @@ struct SystemSound: Identifiable, Equatable {
     var displayName: String { name }
 }
 
+enum LanguageChoice: String, Codable, CaseIterable, Identifiable {
+    case chinese
+    case english
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .chinese: L10n.chinese
+        case .english: L10n.english
+        }
+    }
+
+    var code: String {
+        switch self {
+        case .chinese: "zh-Hans"
+        case .english: "en"
+        }
+    }
+}
+
 enum AccentColorChoice: String, Codable, CaseIterable, Identifiable {
     case systemBlue
     case sage
@@ -28,13 +49,13 @@ enum AccentColorChoice: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .systemBlue: "经典蓝"
-        case .sage:       "鼠尾草"
-        case .sierra:     "山脉蓝"
-        case .lavender:   "薰衣草"
-        case .rose:       "玫瑰"
-        case .titanium:   "钛金"
-        case .starlight:  "星光"
+        case .systemBlue: L10n.classicBlue
+        case .sage:       L10n.sage
+        case .sierra:     L10n.sierraBlue
+        case .lavender:   L10n.lavender
+        case .rose:       L10n.rose
+        case .titanium:   L10n.titanium
+        case .starlight:  L10n.starlight
         }
     }
 
@@ -59,8 +80,8 @@ enum MenuBarDisplayStyle: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .digital: "数字时钟"
-        case .ring: "圆环盈缺"
+        case .digital: L10n.digitalClock
+        case .ring: L10n.progressRing
         }
     }
 }
@@ -75,7 +96,7 @@ enum FocusPresetChoice: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .custom: "手动设置"
+        case .custom: L10n.custom
         case .flow: "Flow 90/20"
         case .pomodoro: "Pomodoro 30/5"
         case .deepwork: "Focus 50/10"
@@ -94,6 +115,7 @@ struct AppSettings: Codable, Equatable {
     var autoStartNextSession: Bool = false
     var menuBarDisplayStyle: MenuBarDisplayStyle = .digital
     var accentColorChoice: AccentColorChoice = .sage
+    var languageChoice: LanguageChoice = .chinese
     var blockedApps: [BlockedApp] = []
 
     static let defaultValue = AppSettings()
@@ -120,6 +142,10 @@ struct AppSettings: Codable, Equatable {
 final class PreferencesStore: ObservableObject {
     @Published var settings: AppSettings {
         didSet {
+            // 当语言切换时，触发 UI 刷新
+            if oldValue.languageChoice != settings.languageChoice {
+                L10n.configure(language: settings.languageChoice)
+            }
             save()
         }
     }
@@ -136,6 +162,7 @@ final class PreferencesStore: ObservableObject {
             loadedSettings = .defaultValue
         }
         settings = loadedSettings
+        L10n.configure(language: loadedSettings.languageChoice)
     }
 
     private func save() {

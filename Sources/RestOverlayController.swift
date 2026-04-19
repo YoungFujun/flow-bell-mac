@@ -177,7 +177,7 @@ struct RestOverlayView: View {
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(Color.white.opacity(0.72))
 
-                Text("休息一下")
+                Text(L10n.restAWhile)
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(Color.white.opacity(0.72))
             }
@@ -187,12 +187,12 @@ struct RestOverlayView: View {
                 .monospacedDigit()
                 .foregroundStyle(.white)
 
-            Text("离开屏幕、放松眼睛")
+            Text(L10n.stepAwayFromScreen)
                 .font(.system(size: 13))
                 .foregroundStyle(Color.white.opacity(0.55))
 
             HStack(spacing: 8) {
-                Button("最小化") {
+                Button(L10n.minimize) {
                     model.onMinimize?()
                 }
                 .buttonStyle(.plain)
@@ -202,7 +202,7 @@ struct RestOverlayView: View {
                 .padding(.vertical, 6)
                 .background(Color.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
 
-                Button("提前结束") {
+                Button(L10n.endRest) {
                     model.onSkip?()
                 }
                 .buttonStyle(.plain)
@@ -212,7 +212,7 @@ struct RestOverlayView: View {
                 .padding(.vertical, 6)
                 .background(Color.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
 
-                Button("下一轮专注") {
+                Button(L10n.nextFocus) {
                     model.onNextFocus?()
                 }
                 .buttonStyle(.plain)
@@ -243,7 +243,7 @@ private struct RestMiniView: View {
                 .foregroundStyle(model.accentColor)
                 .frame(width: 20)
 
-            Text("休息 \(model.miniTimeText)")
+            Text(L10n.restTime(time: model.miniTimeText))
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.primary)
 

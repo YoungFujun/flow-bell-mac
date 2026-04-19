@@ -62,44 +62,75 @@ private struct MenuBarLabelView: View {
 
     var body: some View {
         if showMicroBreakCountdown || style == .digital {
-            Text(displayText)
-                .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                .padding(.horizontal, 5)
-                .padding(.vertical, 1.5)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 3)
-                        .stroke(Color.primary.opacity(0.3), lineWidth: 1)
-                )
+            Image(nsImage: ClockBoxImage.make(text: displayText))
+                .interpolation(.high)
         } else {
-            StatusRingView(phase: phase, isRunning: isRunning, progress: progress)
-                .frame(width: 22, height: 22)
+            Image(nsImage: StatusRingImage.make(phase: phase, isRunning: isRunning, progress: progress))
+                .interpolation(.high)
         }
     }
 }
 
-private struct StatusRingView: View {
-    let phase: FocusEngine.Phase
-    let isRunning: Bool
-    let progress: Double
+private enum ClockBoxImage {
+    static func make(text: String) -> NSImage {
+        let font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: NSColor.black
+        ]
+        let str = NSAttributedString(string: text, attributes: attrs)
+        let textSize = str.size()
+        let hPad: CGFloat = 5
+        let vPad: CGFloat = 2
+        let size = NSSize(width: textSize.width + hPad * 2, height: textSize.height + vPad * 2)
+        let image = NSImage(size: size)
+        image.lockFocus()
 
-    var span: Double {
-        switch phase {
-        case .idle: return 0.12
-        case .focus, .rest: return max(progress, 0.04)
-        }
+        let borderRect = NSRect(origin: .zero, size: size).insetBy(dx: 0.5, dy: 0.5)
+        let path = NSBezierPath(roundedRect: borderRect, xRadius: 3, yRadius: 3)
+        path.lineWidth = 1
+        NSColor.black.withAlphaComponent(0.5).setStroke()
+        path.stroke()
+
+        str.draw(at: NSPoint(x: hPad, y: vPad))
+        image.unlockFocus()
+        image.isTemplate = true
+        return image
     }
+}
 
-    var body: some View {
-        ZStack {
-            Circle()
-                .stroke(Color.primary.opacity(0.18), lineWidth: 2.5)
-            Circle()
-                .trim(from: 0, to: span)
-                .stroke(
-                    Color.primary.opacity(isRunning ? 1.0 : 0.55),
-                    style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
+private enum StatusRingImage {
+    static func make(phase: FocusEngine.Phase, isRunning: Bool, progress: Double) -> NSImage {
+        let size = NSSize(width: 22, height: 22)
+        let image = NSImage(size: size)
+        image.lockFocus()
+
+        let rect = NSRect(origin: .zero, size: size)
+        let ringRect = rect.insetBy(dx: 3, dy: 3)
+        let center = NSPoint(x: rect.midX, y: rect.midY)
+        let radius = ringRect.width / 2
+
+        NSColor.black.withAlphaComponent(0.18).setStroke()
+        let baseRing = NSBezierPath(ovalIn: ringRect)
+        baseRing.lineWidth = 2.5
+        baseRing.stroke()
+
+        let span: Double
+        switch phase {
+        case .idle: span = 0.12
+        case .focus, .rest: span = max(progress, 0.04)
         }
+
+        let arc = NSBezierPath()
+        arc.appendArc(withCenter: center, radius: radius,
+                      startAngle: 90, endAngle: 90 - (360 * span), clockwise: true)
+        arc.lineWidth = 2.5
+        arc.lineCapStyle = .round
+        NSColor.black.withAlphaComponent(isRunning ? 1.0 : 0.55).setStroke()
+        arc.stroke()
+
+        image.unlockFocus()
+        image.isTemplate = true
+        return image
     }
 }

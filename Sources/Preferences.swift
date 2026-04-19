@@ -1,10 +1,41 @@
 import Foundation
+import SwiftUI
 
 struct BlockedApp: Codable, Equatable, Hashable, Identifiable {
     let bundleIdentifier: String
     let displayName: String
 
     var id: String { bundleIdentifier }
+}
+
+enum AccentColorChoice: String, Codable, CaseIterable, Identifiable {
+    case blue
+    case green
+    case brown
+    case gray
+    case purple
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .blue:   "蓝"
+        case .green:  "绿"
+        case .brown:  "棕"
+        case .gray:   "灰"
+        case .purple: "紫"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .blue:   Color(red: 0.290, green: 0.565, blue: 0.851)
+        case .green:  Color(red: 0.290, green: 0.486, blue: 0.349)
+        case .brown:  Color(red: 0.545, green: 0.451, blue: 0.333)
+        case .gray:   Color(red: 0.420, green: 0.420, blue: 0.420)
+        case .purple: Color(red: 0.482, green: 0.408, blue: 0.710)
+        }
+    }
 }
 
 enum MenuBarDisplayStyle: String, Codable, CaseIterable, Identifiable {
@@ -31,6 +62,7 @@ struct AppSettings: Codable, Equatable {
     var microBreakEndCueEnabled: Bool = true
     var autoStartNextSession: Bool = false
     var menuBarDisplayStyle: MenuBarDisplayStyle = .digital
+    var accentColorChoice: AccentColorChoice = .blue
     var blockedApps: [BlockedApp] = []
 
     static let defaultValue = AppSettings()

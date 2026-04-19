@@ -18,6 +18,8 @@ struct ContentView: View {
     @State private var durationExpanded = false
     @State private var soundExpanded = false
 
+    private var accent: Color { preferences.settings.accentColorChoice.color }
+
     var body: some View {
         VStack(spacing: 0) {
             headerCard
@@ -69,7 +71,7 @@ struct ContentView: View {
                 .trim(from: 0, to: max(engine.progressValue(), 0.015))
                 .stroke(
                     AngularGradient(
-                        colors: [Color.accentColor, Color.accentColor.opacity(0.4)],
+                        colors: [accent, accent.opacity(0.4)],
                         center: .center
                     ),
                     style: StrokeStyle(lineWidth: 8, lineCap: .round)
@@ -77,7 +79,7 @@ struct ContentView: View {
                 .rotationEffect(.degrees(-90))
             Image(systemName: engine.menuBarSymbol)
                 .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(accent)
         }
         .frame(width: 64, height: 64)
     }
@@ -132,7 +134,7 @@ struct ContentView: View {
                 .frame(height: 44)
                 .background(
                     prominent
-                        ? (disabled ? Color.accentColor.opacity(0.35) : Color.accentColor)
+                        ? (disabled ? accent.opacity(0.35) : accent)
                         : Color.primary.opacity(disabled ? 0.04 : 0.08),
                     in: RoundedRectangle(cornerRadius: 10)
                 )
@@ -220,6 +222,25 @@ struct ContentView: View {
                 formToggleRow("微休息结束提示音", isOn: microBreakEndCueBinding)
                 formDivider()
                 formToggleRow("休息结束后自动开始下一轮", isOn: autoStartBinding)
+                formDivider()
+                formRow("主题色") {
+                    HStack(spacing: 8) {
+                        ForEach(AccentColorChoice.allCases) { choice in
+                            let selected = preferences.settings.accentColorChoice == choice
+                            Circle()
+                                .fill(choice.color)
+                                .frame(width: 20, height: 20)
+                                .overlay(
+                                    Circle()
+                                        .strokeBorder(Color.primary.opacity(selected ? 0.7 : 0), lineWidth: 2)
+                                        .padding(-3)
+                                )
+                                .onTapGesture {
+                                    preferences.settings.accentColorChoice = choice
+                                }
+                        }
+                    }
+                }
             }
 
             Divider()
@@ -580,12 +601,12 @@ struct ContentView: View {
                         Text(" ").font(.system(size: 8))
                     }
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(isToday ? Color.accentColor : Color.accentColor.opacity(0.35))
+                        .fill(isToday ? accent : accent.opacity(0.35))
                         .frame(height: barHeight == 0 ? 2 : barHeight)
                         .opacity(barHeight == 0 ? 0.15 : 1)
                     Text(day.label)
                         .font(.system(size: 9))
-                        .foregroundStyle(isToday ? Color.accentColor : Color.secondary)
+                        .foregroundStyle(isToday ? accent : Color.secondary)
                         .fontWeight(isToday ? .semibold : .regular)
                 }
                 .frame(maxWidth: .infinity)

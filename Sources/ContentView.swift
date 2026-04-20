@@ -8,18 +8,55 @@ struct ContentView: View {
         case blockedAppsSection
     }
 
-    private enum Palette {
-        static let backgroundTint = Color(red: 1.0, green: 0.965, blue: 0.985).opacity(0.34)
-        static let surfaceGlow = Color.white.opacity(0.22)
-        static let sectionFill = Color.clear
-        static let rowFill = Color.clear
-        static let pillFill = Color.black.opacity(0.028)
-        static let controlFill = Color.black.opacity(0.048)
-        static let disabledControlFill = Color.black.opacity(0.024)
-        static let menuFill = Color.black.opacity(0.03)
-        static let divider = Color.black.opacity(0.035)
+    private struct Palette {
+        let backgroundBase: Color
+        let backgroundTint: Color
+        let surfaceGlow: Color
+        let sectionFill: Color
+        let rowFill: Color
+        let pillFill: Color
+        let controlFill: Color
+        let disabledControlFill: Color
+        let menuFill: Color
+        let divider: Color
+        let ringTrack: Color
+        let secondaryText: Color
+        let mutedText: Color
+
+        init(colorScheme: ColorScheme) {
+            if colorScheme == .dark {
+                backgroundBase = Color(red: 0.060, green: 0.058, blue: 0.064)
+                backgroundTint = Color(red: 0.155, green: 0.135, blue: 0.150).opacity(0.46)
+                surfaceGlow = Color.white.opacity(0.025)
+                sectionFill = Color.clear
+                rowFill = Color.clear
+                pillFill = Color.white.opacity(0.055)
+                controlFill = Color.white.opacity(0.075)
+                disabledControlFill = Color.white.opacity(0.030)
+                menuFill = Color.white.opacity(0.070)
+                divider = Color.white.opacity(0.18)
+                ringTrack = Color.white.opacity(0.115)
+                secondaryText = Color.white.opacity(0.66)
+                mutedText = Color.white.opacity(0.44)
+            } else {
+                backgroundBase = Color.clear
+                backgroundTint = Color(red: 1.0, green: 0.965, blue: 0.985).opacity(0.34)
+                surfaceGlow = Color.white.opacity(0.22)
+                sectionFill = Color.clear
+                rowFill = Color.clear
+                pillFill = Color.black.opacity(0.028)
+                controlFill = Color.black.opacity(0.048)
+                disabledControlFill = Color.black.opacity(0.024)
+                menuFill = Color.black.opacity(0.03)
+                divider = Color.black.opacity(0.085)
+                ringTrack = Color.primary.opacity(0.08)
+                secondaryText = Color.secondary
+                mutedText = Color.primary.opacity(0.3)
+            }
+        }
     }
 
+    @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var preferences: PreferencesStore
     @EnvironmentObject private var engine: FocusEngine
     @EnvironmentObject private var installedApps: InstalledAppsStore
@@ -32,6 +69,7 @@ struct ContentView: View {
     @State private var pendingScrollTarget: ScrollTarget?
 
     private var accent: Color { preferences.settings.accentColorChoice.color }
+    private var palette: Palette { Palette(colorScheme: colorScheme) }
     private let panelHeight: CGFloat = 505
 
     var body: some View {
@@ -58,9 +96,13 @@ struct ContentView: View {
         .frame(height: panelHeight, alignment: .top)
         .background {
             ZStack {
-                Rectangle().fill(.regularMaterial)
-                Rectangle().fill(Palette.backgroundTint)
-                Rectangle().fill(Palette.surfaceGlow)
+                if colorScheme == .dark {
+                    Rectangle().fill(palette.backgroundBase)
+                } else {
+                    Rectangle().fill(.regularMaterial)
+                }
+                Rectangle().fill(palette.backgroundTint)
+                Rectangle().fill(palette.surfaceGlow)
             }
         }
         .id(preferences.settings.languageChoice) // Force UI refresh when language changes
@@ -88,7 +130,7 @@ struct ContentView: View {
 
     private var softDivider: some View {
         Rectangle()
-            .fill(Palette.divider)
+            .fill(palette.divider)
             .frame(height: 1)
     }
 
@@ -100,7 +142,7 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(engine.phaseCaption)
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(palette.secondaryText)
                         .tracking(0.5)
                     Text(headerTimeLabel)
                         .font(.system(size: 44, weight: .semibold, design: .rounded))
@@ -112,7 +154,7 @@ struct ContentView: View {
             if let taskText = engine.currentTaskText, engine.phase == .focus {
                 Text(taskText)
                     .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(palette.secondaryText)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -124,7 +166,7 @@ struct ContentView: View {
     private var headerRing: some View {
         ZStack {
             Circle()
-                .stroke(Color.primary.opacity(0.08), lineWidth: 8)
+                .stroke(palette.ringTrack, lineWidth: 8)
             Circle()
                 .trim(from: 0, to: max(engine.progressValue(), 0.015))
                 .stroke(
@@ -147,7 +189,7 @@ struct ContentView: View {
         HStack {
             Text(L10n.menuBar)
                 .font(.system(size: 12))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(palette.secondaryText)
             Spacer()
             HStack(spacing: 0) {
                 ForEach(MenuBarDisplayStyle.allCases) { style in
@@ -161,7 +203,7 @@ struct ContentView: View {
                             .minimumScaleFactor(0.85)
                             .frame(maxWidth: .infinity)
                             .frame(height: 28)
-                            .foregroundStyle(selected ? .white : Color.primary.opacity(0.72))
+                            .foregroundStyle(selected ? .white : palette.secondaryText)
                             .background(selected ? accent : Color.clear, in: RoundedRectangle(cornerRadius: 7))
                     }
                     .buttonStyle(.plain)
@@ -169,7 +211,7 @@ struct ContentView: View {
             }
             .frame(width: 150)
             .padding(2)
-            .background(Palette.menuFill, in: RoundedRectangle(cornerRadius: 8))
+            .background(palette.menuFill, in: RoundedRectangle(cornerRadius: 8))
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
@@ -179,7 +221,7 @@ struct ContentView: View {
         HStack {
             Text(L10n.preset)
                 .font(.system(size: 12))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(palette.secondaryText)
             Spacer()
             presetMenu
                 .onChange(of: preferences.settings.focusMinutes) { _ in applyPresetIfMatch() }
@@ -211,7 +253,7 @@ struct ContentView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
-        .background(Palette.sectionFill)
+        .background(palette.sectionFill)
     }
 
     private var controlRow: some View {
@@ -249,10 +291,10 @@ struct ContentView: View {
                     .background(
                         prominent
                             ? (disabled ? accent.opacity(0.35) : accent)
-                            : (disabled ? Palette.disabledControlFill : Palette.controlFill),
+                            : (disabled ? palette.disabledControlFill : palette.controlFill),
                         in: RoundedRectangle(cornerRadius: 10)
                     )
-                .foregroundStyle(prominent ? .white : Color.primary.opacity(disabled ? 0.3 : 1))
+                .foregroundStyle(prominent ? .white : (disabled ? palette.mutedText : Color.primary))
         }
         .buttonStyle(.plain)
         .disabled(disabled)
@@ -279,14 +321,14 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.system(size: 10))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(palette.secondaryText)
             Text(value)
                 .font(.system(size: 18, weight: .semibold, design: .rounded))
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Palette.pillFill, in: RoundedRectangle(cornerRadius: 12))
+        .background(palette.pillFill, in: RoundedRectangle(cornerRadius: 12))
     }
 
     // MARK: - Settings form (collapsible)
@@ -390,7 +432,7 @@ struct ContentView: View {
             }) {
                 HStack(spacing: 8) {
                     Image(systemName: icon)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(palette.secondaryText)
                         .frame(width: 16)
                     Text(title)
                         .font(.system(size: 13, weight: .medium))
@@ -398,11 +440,11 @@ struct ContentView: View {
                     Spacer()
                     if let subtitle, !isExpanded.wrappedValue {
                         Text(subtitle)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(palette.secondaryText)
                     }
                     Image(systemName: "chevron.right")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(palette.secondaryText)
                         .rotationEffect(.degrees(isExpanded.wrappedValue ? 90 : 0))
                 }
                 .frame(height: 20)
@@ -430,7 +472,7 @@ struct ContentView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
-        .background(Palette.rowFill)
+        .background(palette.rowFill)
     }
 
     private func formStepperRow(
@@ -456,7 +498,7 @@ struct ContentView: View {
                     value.wrappedValue = min(max(value.wrappedValue, range.lowerBound), range.upperBound)
                 }
                 Text(suffix.count == 1 ? " \(suffix)" : suffix)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(palette.secondaryText)
                     .frame(width: 32, alignment: .leading)
                 Stepper("", value: value, in: range, step: step)
                     .labelsHidden()
@@ -465,7 +507,7 @@ struct ContentView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
-        .background(Palette.rowFill)
+        .background(palette.rowFill)
     }
 
     private func formToggleRow(_ label: String, isOn: Binding<Bool>) -> some View {
@@ -479,7 +521,7 @@ struct ContentView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
-        .background(Palette.rowFill)
+        .background(palette.rowFill)
     }
 
     private func formDivider() -> some View {
@@ -560,10 +602,10 @@ struct ContentView: View {
                 .foregroundStyle(accent)
         }
         .font(.system(size: 13, weight: .medium))
-        .foregroundStyle(Color.primary.opacity(0.8))
+        .foregroundStyle(colorScheme == .dark ? Color.white.opacity(0.86) : Color.primary.opacity(0.8))
         .padding(.horizontal, 10)
         .frame(height: 28)
-        .background(Palette.menuFill, in: RoundedRectangle(cornerRadius: 8))
+        .background(palette.menuFill, in: RoundedRectangle(cornerRadius: 8))
     }
 
     private var blockedAppsContent: some View {
@@ -572,7 +614,7 @@ struct ContentView: View {
                 .textFieldStyle(.roundedBorder)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 10)
-                .background(Palette.rowFill)
+                .background(palette.rowFill)
 
             let suggestions = installedApps.search(appSearchQuery, excluding: preferences.settings.blockedApps)
             if !appSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !suggestions.isEmpty {
@@ -594,7 +636,7 @@ struct ContentView: View {
                                 Text(app.displayName)
                                 Spacer()
                                 Text(bundleSuffix(app.bundleIdentifier))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(palette.secondaryText)
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.horizontal, 20)
@@ -605,17 +647,17 @@ struct ContentView: View {
                         softDivider.padding(.leading, 20)
                     }
                 }
-                .background(Palette.rowFill)
+                .background(palette.rowFill)
             }
 
             if preferences.settings.blockedApps.isEmpty {
                 Text(L10n.noBlockedList)
                     .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(palette.secondaryText)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Palette.rowFill)
+                    .background(palette.rowFill)
             } else {
                 VStack(spacing: 0) {
                     ForEach(preferences.settings.blockedApps) { app in
@@ -629,7 +671,7 @@ struct ContentView: View {
                                 Text(app.displayName)
                                 Text(app.bundleIdentifier)
                                     .font(.system(size: 10))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(palette.secondaryText)
                             }
                             Spacer()
                             HStack(spacing: 12) {
@@ -654,13 +696,13 @@ struct ContentView: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 8)
-                        .background(Palette.rowFill)
+                        .background(palette.rowFill)
                         softDivider.padding(.leading, 54)
                     }
                 }
             }
         }
-        .background(Palette.rowFill)
+        .background(palette.rowFill)
     }
 
     // MARK: - Footer
@@ -669,15 +711,15 @@ struct ContentView: View {
         HStack {
             Text("Flow Bell")
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(palette.secondaryText)
             Spacer()
             Button(L10n.quit) { NSApplication.shared.terminate(nil) }
                 .buttonStyle(.plain)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(palette.secondaryText)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(Palette.controlFill, in: RoundedRectangle(cornerRadius: 6))
+                .background(palette.controlFill, in: RoundedRectangle(cornerRadius: 6))
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
@@ -738,11 +780,11 @@ struct ContentView: View {
         Button(title, action: action)
             .buttonStyle(.plain)
             .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(prominent ? .white : Color.primary.opacity(0.8))
+            .foregroundStyle(prominent ? .white : (colorScheme == .dark ? Color.white.opacity(0.84) : Color.primary.opacity(0.8)))
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(
-                prominent ? accent : Palette.controlFill,
+                prominent ? accent : palette.controlFill,
                 in: RoundedRectangle(cornerRadius: 8, style: .continuous)
             )
     }

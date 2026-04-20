@@ -126,13 +126,40 @@ final class TaskPromptModel: ObservableObject {
 
 struct TaskPromptView: View {
     @ObservedObject var model: TaskPromptModel
+    @Environment(\.colorScheme) private var colorScheme
     @FocusState private var isInputFocused: Bool
 
-    private enum Palette {
-        static let backgroundTint = Color(red: 1.0, green: 0.97, blue: 0.985).opacity(0.46)
-        static let inputFill = Color.black.opacity(0.02)
-        static let border = Color.black.opacity(0.08)
+    private struct Palette {
+        let backgroundBase: Color
+        let backgroundTint: Color
+        let surfaceGlow: Color
+        let inputFill: Color
+        let inputBorder: Color
+        let border: Color
+        let secondaryText: Color
+
+        init(colorScheme: ColorScheme) {
+            if colorScheme == .dark {
+                backgroundBase = Color(red: 0.060, green: 0.058, blue: 0.064)
+                backgroundTint = Color(red: 0.155, green: 0.135, blue: 0.150).opacity(0.48)
+                surfaceGlow = Color.white.opacity(0.025)
+                inputFill = Color.white.opacity(0.075)
+                inputBorder = Color.white.opacity(0.13)
+                border = Color.white.opacity(0.14)
+                secondaryText = Color.white.opacity(0.68)
+            } else {
+                backgroundBase = Color.clear
+                backgroundTint = Color(red: 1.0, green: 0.97, blue: 0.985).opacity(0.46)
+                surfaceGlow = Color.white.opacity(0.08)
+                inputFill = Color.black.opacity(0.02)
+                inputBorder = Color.clear
+                border = Color.black.opacity(0.08)
+                secondaryText = Color.secondary
+            }
+        }
     }
+
+    private var palette: Palette { Palette(colorScheme: colorScheme) }
 
     var body: some View {
         VStack(spacing: 24) {
@@ -148,7 +175,11 @@ struct TaskPromptView: View {
                 .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(Palette.inputFill)
+                        .fill(palette.inputFill)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .strokeBorder(palette.inputBorder, lineWidth: 1)
                 )
                 .frame(width: 320)
                 .focused($isInputFocused)
@@ -163,7 +194,7 @@ struct TaskPromptView: View {
                 }
                 .buttonStyle(.plain)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(palette.secondaryText)
                 .padding(.horizontal, 24)
                 .padding(.vertical, 10)
 
@@ -184,18 +215,23 @@ struct TaskPromptView: View {
         .padding(28)
         .background(
             ZStack {
+                if colorScheme == .dark {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(palette.backgroundBase)
+                } else {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(.regularMaterial)
+                }
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(.regularMaterial)
+                    .fill(palette.backgroundTint)
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Palette.backgroundTint)
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.08))
+                    .fill(palette.surfaceGlow)
             }
             .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 2)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Palette.border, lineWidth: 1)
+                .strokeBorder(palette.border, lineWidth: 1)
         )
         .onExitCommand {
             // ESC 键触发取消

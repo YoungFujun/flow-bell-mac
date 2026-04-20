@@ -58,7 +58,7 @@
 ## 安装
 
 ### 下载安装（推荐）
-从 [最新发布页面](../../releases/latest) 下载 `Flow Bell.zip`，解压后将 `Flow Bell.app` 移入 `/Applications`。
+从 [最新发布页面](../../releases/latest) 下载 `Flow.Bell.zip`，解压后将 `Flow Bell.app` 移入 `/Applications`。
 
 > 首次启动时 macOS 可能显示安全警告，前往 **系统设置 → 隐私与安全性**，点击「仍要打开」。
 
@@ -74,7 +74,7 @@ cd flow-bell-mac
 脚本将编译 release 版本、生成图标，并输出：
 - `dist/Flow Bell.app`
 - `dist/Install Flow Bell.command` — 双击即可安装到 `/Applications`
-- `dist/Flow Bell.zip`
+- `dist/Flow.Bell.zip`
 
 ---
 

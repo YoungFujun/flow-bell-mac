@@ -8,6 +8,18 @@ struct ContentView: View {
         case blockedAppsSection
     }
 
+    private enum Palette {
+        static let backgroundTint = Color(red: 1.0, green: 0.965, blue: 0.985).opacity(0.34)
+        static let surfaceGlow = Color.white.opacity(0.22)
+        static let sectionFill = Color.clear
+        static let rowFill = Color.clear
+        static let pillFill = Color.black.opacity(0.028)
+        static let controlFill = Color.black.opacity(0.048)
+        static let disabledControlFill = Color.black.opacity(0.024)
+        static let menuFill = Color.black.opacity(0.03)
+        static let divider = Color.black.opacity(0.035)
+    }
+
     @EnvironmentObject private var preferences: PreferencesStore
     @EnvironmentObject private var engine: FocusEngine
     @EnvironmentObject private var installedApps: InstalledAppsStore
@@ -20,7 +32,7 @@ struct ContentView: View {
     @State private var pendingScrollTarget: ScrollTarget?
 
     private var accent: Color { preferences.settings.accentColorChoice.color }
-    private let panelHeight: CGFloat = 500
+    private let panelHeight: CGFloat = 505
 
     var body: some View {
         VStack(spacing: 0) {
@@ -39,12 +51,18 @@ struct ContentView: View {
                     }
                 }
             }
-            Divider()
+            softDivider
             footerRow
         }
         .frame(maxWidth: .infinity, alignment: .top)
         .frame(height: panelHeight, alignment: .top)
-        .background(Color(NSColor.windowBackgroundColor))
+        .background {
+            ZStack {
+                Rectangle().fill(.regularMaterial)
+                Rectangle().fill(Palette.backgroundTint)
+                Rectangle().fill(Palette.surfaceGlow)
+            }
+        }
         .id(preferences.settings.languageChoice) // Force UI refresh when language changes
         .onChange(of: engine.shouldPromptForNextFocus) { shouldPrompt in
             guard shouldPrompt else { return }
@@ -57,15 +75,21 @@ struct ContentView: View {
         VStack(spacing: 0) {
             headerCard
             menuBarPickerRow
-            Divider()
+            softDivider
             sessionCard
-            Divider()
+            softDivider
             presetRow
-            Divider()
+            softDivider
             durationSection
-            Divider()
+            softDivider
             settingsForm
         }
+    }
+
+    private var softDivider: some View {
+        Rectangle()
+            .fill(Palette.divider)
+            .frame(height: 1)
     }
 
     // MARK: - Header
@@ -125,14 +149,27 @@ struct ContentView: View {
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             Spacer()
-            Picker("", selection: menuBarStyleBinding) {
+            HStack(spacing: 0) {
                 ForEach(MenuBarDisplayStyle.allCases) { style in
-                    Text(style.title).tag(style)
+                    let selected = preferences.settings.menuBarDisplayStyle == style
+                    Button {
+                        preferences.settings.menuBarDisplayStyle = style
+                    } label: {
+                        Text(style.title)
+                            .font(.system(size: 12, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 28)
+                            .foregroundStyle(selected ? .white : Color.primary.opacity(0.72))
+                            .background(selected ? accent : Color.clear, in: RoundedRectangle(cornerRadius: 7))
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .pickerStyle(.segmented)
-            .tint(accent)
             .frame(width: 150)
+            .padding(2)
+            .background(Palette.menuFill, in: RoundedRectangle(cornerRadius: 8))
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
@@ -144,15 +181,9 @@ struct ContentView: View {
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
             Spacer()
-            Picker("", selection: presetBinding) {
-                ForEach(FocusPresetChoice.allCases) { preset in
-                    Text(preset.title).tag(preset)
-                }
-            }
-            .tint(accent)
-            .frame(width: 170)
-            .onChange(of: preferences.settings.focusMinutes) { _ in applyPresetIfMatch() }
-            .onChange(of: preferences.settings.breakMinutes) { _ in applyPresetIfMatch() }
+            presetMenu
+                .onChange(of: preferences.settings.focusMinutes) { _ in applyPresetIfMatch() }
+                .onChange(of: preferences.settings.breakMinutes) { _ in applyPresetIfMatch() }
         }
         .frame(height: 20)
         .padding(.horizontal, 20)
@@ -180,7 +211,7 @@ struct ContentView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
-        .background(Color.primary.opacity(0.04))
+        .background(Palette.sectionFill)
     }
 
     private var controlRow: some View {
@@ -215,12 +246,12 @@ struct ContentView: View {
                 .font(.system(size: 14, weight: .semibold))
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
-                .background(
-                    prominent
-                        ? (disabled ? accent.opacity(0.35) : accent)
-                        : Color.primary.opacity(disabled ? 0.04 : 0.08),
-                    in: RoundedRectangle(cornerRadius: 10)
-                )
+                    .background(
+                        prominent
+                            ? (disabled ? accent.opacity(0.35) : accent)
+                            : (disabled ? Palette.disabledControlFill : Palette.controlFill),
+                        in: RoundedRectangle(cornerRadius: 10)
+                    )
                 .foregroundStyle(prominent ? .white : Color.primary.opacity(disabled ? 0.3 : 1))
         }
         .buttonStyle(.plain)
@@ -255,7 +286,7 @@ struct ContentView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
+        .background(Palette.pillFill, in: RoundedRectangle(cornerRadius: 12))
     }
 
     // MARK: - Settings form (collapsible)
@@ -291,28 +322,11 @@ struct ContentView: View {
                 onToggle: handleSectionToggle
             ) {
                 formRow(L10n.bellSound) {
-                    Picker("", selection: soundBinding) {
-                        ForEach(AppSettings.availableSystemSounds) { sound in
-                            Text(sound.displayName).tag(sound.name)
-                        }
-                    }
-                    .tint(accent)
-                    .frame(width: 170)
-                    .onChange(of: preferences.settings.soundName) { name in
-                        let sound = NSSound(named: NSSound.Name(name))
-                        sound?.volume = 1.0
-                        sound?.play()
-                    }
+                    soundMenu
                 }
                 formDivider()
                 formRow(L10n.languageLabel) {
-                    Picker("", selection: languageBinding) {
-                        ForEach(LanguageChoice.allCases) { choice in
-                            Text(choice.title).tag(choice)
-                        }
-                    }
-                    .tint(accent)
-                    .frame(width: 170)
+                    languageMenu
                 }
                 formDivider()
                 formToggleRow(L10n.showTaskPrompt, isOn: showTaskPromptBinding)
@@ -341,7 +355,7 @@ struct ContentView: View {
                 }
             }
 
-            Divider()
+            softDivider
 
             collapsibleSection(
                 title: L10n.blockedApps,
@@ -416,7 +430,7 @@ struct ContentView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
-        .background(Color.primary.opacity(0.03))
+        .background(Palette.rowFill)
     }
 
     private func formStepperRow(
@@ -451,7 +465,7 @@ struct ContentView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
-        .background(Color.primary.opacity(0.03))
+        .background(Palette.rowFill)
     }
 
     private func formToggleRow(_ label: String, isOn: Binding<Bool>) -> some View {
@@ -465,11 +479,91 @@ struct ContentView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
-        .background(Color.primary.opacity(0.03))
+        .background(Palette.rowFill)
     }
 
     private func formDivider() -> some View {
-        Divider().padding(.leading, 20)
+        softDivider.padding(.leading, 20)
+    }
+
+    private var presetMenu: some View {
+        Menu {
+            ForEach(FocusPresetChoice.allCases) { preset in
+                Button {
+                    applyPreset(preset)
+                } label: {
+                    if inferredPreset == preset {
+                        Label(preset.title, systemImage: "checkmark")
+                    } else {
+                        Text(preset.title)
+                    }
+                }
+            }
+        } label: {
+            menuLabel(inferredPreset.title)
+        }
+        .buttonStyle(.plain)
+        .frame(width: 170)
+    }
+
+    private var soundMenu: some View {
+        Menu {
+            ForEach(AppSettings.availableSystemSounds) { sound in
+                Button {
+                    preferences.settings.soundName = sound.name
+                    let preview = NSSound(named: NSSound.Name(sound.name))
+                    preview?.volume = 1.0
+                    preview?.play()
+                } label: {
+                    if preferences.settings.soundName == sound.name {
+                        Label(sound.displayName, systemImage: "checkmark")
+                    } else {
+                        Text(sound.displayName)
+                    }
+                }
+            }
+        } label: {
+            menuLabel(preferences.settings.soundName)
+        }
+        .buttonStyle(.plain)
+        .frame(width: 170)
+    }
+
+    private var languageMenu: some View {
+        Menu {
+            ForEach(LanguageChoice.allCases) { choice in
+                Button {
+                    preferences.settings.languageChoice = choice
+                } label: {
+                    if preferences.settings.languageChoice == choice {
+                        Label(choice.title, systemImage: "checkmark")
+                    } else {
+                        Text(choice.title)
+                    }
+                }
+            }
+        } label: {
+            menuLabel(preferences.settings.languageChoice.title)
+        }
+        .buttonStyle(.plain)
+        .frame(width: 170)
+    }
+
+    private func menuLabel(_ title: String) -> some View {
+        HStack(spacing: 6) {
+            Text(title)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+            Spacer(minLength: 6)
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(accent)
+        }
+        .font(.system(size: 13, weight: .medium))
+        .foregroundStyle(Color.primary.opacity(0.8))
+        .padding(.horizontal, 10)
+        .frame(height: 28)
+        .background(Palette.menuFill, in: RoundedRectangle(cornerRadius: 8))
     }
 
     private var blockedAppsContent: some View {
@@ -478,7 +572,7 @@ struct ContentView: View {
                 .textFieldStyle(.roundedBorder)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 10)
-                .background(Color.primary.opacity(0.03))
+                .background(Palette.rowFill)
 
             let suggestions = installedApps.search(appSearchQuery, excluding: preferences.settings.blockedApps)
             if !appSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !suggestions.isEmpty {
@@ -508,10 +602,10 @@ struct ContentView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        Divider().padding(.leading, 20)
+                        softDivider.padding(.leading, 20)
                     }
                 }
-                .background(Color.primary.opacity(0.03))
+                .background(Palette.rowFill)
             }
 
             if preferences.settings.blockedApps.isEmpty {
@@ -521,7 +615,7 @@ struct ContentView: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.primary.opacity(0.03))
+                    .background(Palette.rowFill)
             } else {
                 VStack(spacing: 0) {
                     ForEach(preferences.settings.blockedApps) { app in
@@ -560,13 +654,13 @@ struct ContentView: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 8)
-                        .background(Color.primary.opacity(0.03))
-                        Divider().padding(.leading, 54)
+                        .background(Palette.rowFill)
+                        softDivider.padding(.leading, 54)
                     }
                 }
             }
         }
-        .background(Color.primary.opacity(0.03))
+        .background(Palette.rowFill)
     }
 
     // MARK: - Footer
@@ -583,7 +677,7 @@ struct ContentView: View {
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 6))
+                .background(Palette.controlFill, in: RoundedRectangle(cornerRadius: 6))
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
@@ -648,7 +742,7 @@ struct ContentView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(
-                prominent ? accent : Color.primary.opacity(0.08),
+                prominent ? accent : Palette.controlFill,
                 in: RoundedRectangle(cornerRadius: 8, style: .continuous)
             )
     }

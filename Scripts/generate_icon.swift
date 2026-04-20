@@ -21,49 +21,58 @@ let backgroundPath = NSBezierPath(
 
 NSGraphicsContext.current?.imageInterpolation = .high
 
-// 微妙的渐变背景（不是纯白，增加质感）
-let backgroundGradient = NSGradient(
-    colors: [
-        NSColor(calibratedRed: 0.98, green: 0.98, blue: 0.98, alpha: 1), // 几乎纯白
-        NSColor(calibratedRed: 0.94, green: 0.94, blue: 0.96, alpha: 1)  // 微微偏蓝灰
-    ]
-)
+let deepBlue = NSColor(calibratedRed: 0.285, green: 0.405, blue: 0.560, alpha: 1)
+let softBlue = NSColor(calibratedRed: 0.420, green: 0.545, blue: 0.680, alpha: 1)
+let sage = NSColor(calibratedRed: 0.380, green: 0.573, blue: 0.455, alpha: 1)
+let sageLight = NSColor(calibratedRed: 0.500, green: 0.670, blue: 0.555, alpha: 1)
+
+let backgroundGradient = NSGradient(colors: [
+    NSColor(calibratedRed: 1.000, green: 0.982, blue: 0.990, alpha: 1),
+    NSColor(calibratedRed: 0.945, green: 0.952, blue: 0.965, alpha: 1)
+])
 backgroundGradient?.draw(in: backgroundPath, angle: 135)
 
-// 边缘微妙的内阴影（增加深度感）
-let innerShadowPath = NSBezierPath(roundedRect: roundedBounds, xRadius: 230, yRadius: 230)
-innerShadowPath.lineWidth = 8
-NSColor.black.withAlphaComponent(0.03).setStroke()
-innerShadowPath.stroke()
+NSGraphicsContext.saveGraphicsState()
+backgroundPath.addClip()
+let topGloss = NSBezierPath(ovalIn: NSRect(x: -80, y: 560, width: 1184, height: 520))
+NSColor.white.withAlphaComponent(0.24).setFill()
+topGloss.fill()
+let warmTint = NSBezierPath(ovalIn: NSRect(x: 120, y: 70, width: 800, height: 760))
+NSColor(calibratedRed: 0.92, green: 0.72, blue: 0.82, alpha: 0.07).setFill()
+warmTint.fill()
+NSGraphicsContext.restoreGraphicsState()
 
-// 外部光晕效果
-let outerGlowPath = NSBezierPath(ovalIn: NSRect(x: 180, y: 180, width: 664, height: 664))
-let outerGlowGradient = NSGradient(
-    colors: [
-        NSColor.black.withAlphaComponent(0.04),
-        NSColor.black.withAlphaComponent(0.0)
-    ]
-)
-outerGlowGradient?.draw(in: outerGlowPath, angle: 0)
+let edgeHighlight = NSBezierPath(roundedRect: roundedBounds.insetBy(dx: 6, dy: 6), xRadius: 220, yRadius: 220)
+edgeHighlight.lineWidth = 10
+NSColor.white.withAlphaComponent(0.34).setStroke()
+edgeHighlight.stroke()
 
-// 内部微妙的反光效果
-let innerHighlightPath = NSBezierPath(ovalIn: NSRect(x: 280, y: 280, width: 464, height: 464))
-let innerHighlightGradient = NSGradient(
-    colors: [
-        NSColor.white.withAlphaComponent(0.0),
-        NSColor.white.withAlphaComponent(0.08)
-    ]
-)
-innerHighlightGradient?.draw(in: innerHighlightPath, angle: -45)
+let edgeShade = NSBezierPath(roundedRect: roundedBounds.insetBy(dx: 9, dy: 9), xRadius: 218, yRadius: 218)
+edgeShade.lineWidth = 8
+NSColor.black.withAlphaComponent(0.045).setStroke()
+edgeShade.stroke()
+
+let dialShadow = NSBezierPath(ovalIn: NSRect(x: 194, y: 174, width: 636, height: 636))
+NSColor.black.withAlphaComponent(0.035).setFill()
+dialShadow.fill()
 
 let ringRect = NSRect(x: 236, y: 236, width: 552, height: 552)
+
+let ringShadow = NSBezierPath(ovalIn: ringRect.offsetBy(dx: 0, dy: -10))
+ringShadow.lineWidth = 72
+NSColor.black.withAlphaComponent(0.08).setStroke()
+ringShadow.stroke()
+
 let ringPath = NSBezierPath(ovalIn: ringRect)
 ringPath.lineWidth = 56
-// 浅蓝色圆环
-NSColor(calibratedRed: 0.25, green: 0.40, blue: 0.60, alpha: 1).setStroke() // 更浅的蓝色
+deepBlue.setStroke()
 ringPath.stroke()
 
-// 进度弧 - sage 绿 accent 色
+let ringHighlight = NSBezierPath(ovalIn: ringRect.insetBy(dx: 2, dy: 2))
+ringHighlight.lineWidth = 30
+softBlue.withAlphaComponent(0.36).setStroke()
+ringHighlight.stroke()
+
 let progressPath = NSBezierPath()
 progressPath.appendArc(
     withCenter: NSPoint(x: ringRect.midX, y: ringRect.midY),
@@ -74,44 +83,55 @@ progressPath.appendArc(
 )
 progressPath.lineWidth = 56
 progressPath.lineCapStyle = .round
-NSColor(calibratedRed: 0.380, green: 0.573, blue: 0.455, alpha: 1).setStroke() // sage 绿
+sage.setStroke()
 progressPath.stroke()
 
-// 进度弧末端微光
-let arcEndGlow = NSBezierPath(ovalIn: NSRect(x: ringRect.midX - 46, y: ringRect.maxY - 22, width: 92, height: 92))
-NSColor(calibratedRed: 0.380, green: 0.573, blue: 0.455, alpha: 0.15).setFill()
+let progressHighlight = NSBezierPath()
+progressHighlight.appendArc(
+    withCenter: NSPoint(x: ringRect.midX, y: ringRect.midY),
+    radius: ringRect.width / 2,
+    startAngle: 94,
+    endAngle: 130,
+    clockwise: false
+)
+progressHighlight.lineWidth = 22
+progressHighlight.lineCapStyle = .round
+sageLight.withAlphaComponent(0.46).setStroke()
+progressHighlight.stroke()
+
+let arcEndGlow = NSBezierPath(ovalIn: NSRect(x: ringRect.midX - 50, y: ringRect.maxY - 24, width: 100, height: 100))
+sage.withAlphaComponent(0.14).setFill()
 arcEndGlow.fill()
 
 let knobRect = NSRect(x: ringRect.midX - 38, y: ringRect.maxY - 12, width: 76, height: 112)
 let knobPath = NSBezierPath(roundedRect: knobRect, xRadius: 34, yRadius: 34)
-// 浅蓝色铃舌
-NSColor(calibratedRed: 0.25, green: 0.40, blue: 0.60, alpha: 1).setFill() // 更浅的蓝色
+
+let knobShadow = NSBezierPath(roundedRect: knobRect.offsetBy(dx: 0, dy: -8), xRadius: 34, yRadius: 34)
+NSColor.black.withAlphaComponent(0.08).setFill()
+knobShadow.fill()
+
+deepBlue.setFill()
 knobPath.fill()
 
-// 铃舌顶部微光
 let knobHighlight = NSBezierPath(ovalIn: NSRect(x: knobRect.midX - 28, y: knobRect.minY + 8, width: 56, height: 40))
-NSColor.white.withAlphaComponent(0.12).setFill()
+NSColor.white.withAlphaComponent(0.18).setFill()
 knobHighlight.fill()
 
 let innerCircle = NSBezierPath(ovalIn: NSRect(x: 388, y: 388, width: 248, height: 248))
-// 内圆渐变（微微偏白灰）
-let innerCircleGradient = NSGradient(
-    colors: [
-        NSColor(calibratedRed: 0.96, green: 0.96, blue: 0.96, alpha: 1),
-        NSColor(calibratedRed: 0.93, green: 0.93, blue: 0.95, alpha: 1)
-    ]
-)
+
+let innerCircleShadow = NSBezierPath(ovalIn: NSRect(x: 382, y: 376, width: 260, height: 260))
+NSColor.black.withAlphaComponent(0.035).setFill()
+innerCircleShadow.fill()
+
+let innerCircleGradient = NSGradient(colors: [
+    NSColor(calibratedRed: 0.980, green: 0.976, blue: 0.980, alpha: 1),
+    NSColor(calibratedRed: 0.925, green: 0.932, blue: 0.940, alpha: 1)
+])
 innerCircleGradient?.draw(in: innerCircle, angle: 45)
 
-let centerDot = NSBezierPath(ovalIn: NSRect(x: 486, y: 486, width: 52, height: 52))
-// sage 绿中心点
-NSColor(calibratedRed: 0.380, green: 0.573, blue: 0.455, alpha: 1).setFill()
-centerDot.fill()
-
-// 中心点微光
-let centerDotGlow = NSBezierPath(ovalIn: NSRect(x: 476, y: 476, width: 72, height: 72))
-NSColor(calibratedRed: 0.380, green: 0.573, blue: 0.455, alpha: 0.18).setFill()
-centerDotGlow.fill()
+let innerCircleHighlight = NSBezierPath(ovalIn: NSRect(x: 432, y: 512, width: 160, height: 58))
+NSColor.white.withAlphaComponent(0.18).setFill()
+innerCircleHighlight.fill()
 
 image.unlockFocus()
 

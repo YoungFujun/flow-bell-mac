@@ -17,7 +17,7 @@ SDK_PATH="/Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk"
 MASTER_ICON="$ROOT_DIR/Resources/AppIcon-master.png"
 ICONSET_DIR="$BUILD_DIR/AppIcon.iconset"
 ICNS_PATH="$ROOT_DIR/Resources/AppIcon.icns"
-ZIP_PATH="$DIST_DIR/Flow Bell.zip"
+ZIP_PATH="$DIST_DIR/Flow.Bell.zip"
 INSTALLER_PATH="$DIST_DIR/Install Flow Bell.command"
 
 mkdir -p "$DIST_DIR" "$MODULE_CACHE" "$SWIFTPM_CACHE" "$SWIFTPM_CONFIG" "$SWIFTPM_SECURITY"

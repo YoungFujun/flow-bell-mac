@@ -128,6 +128,12 @@ struct TaskPromptView: View {
     @ObservedObject var model: TaskPromptModel
     @FocusState private var isInputFocused: Bool
 
+    private enum Palette {
+        static let backgroundTint = Color(red: 1.0, green: 0.97, blue: 0.985).opacity(0.46)
+        static let inputFill = Color.black.opacity(0.02)
+        static let border = Color.black.opacity(0.08)
+    }
+
     var body: some View {
         VStack(spacing: 24) {
             // 标题
@@ -142,7 +148,7 @@ struct TaskPromptView: View {
                 .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.primary.opacity(0.08))
+                        .fill(Palette.inputFill)
                 )
                 .frame(width: 320)
                 .focused($isInputFocused)
@@ -177,13 +183,19 @@ struct TaskPromptView: View {
         }
         .padding(28)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(NSColor.windowBackgroundColor))
-                .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 2)
+            ZStack {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(.regularMaterial)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Palette.backgroundTint)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.white.opacity(0.08))
+            }
+            .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 2)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.12), lineWidth: 1)
+                .strokeBorder(Palette.border, lineWidth: 1)
         )
         .onExitCommand {
             // ESC 键触发取消

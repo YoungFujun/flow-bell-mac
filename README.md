@@ -99,7 +99,7 @@ cd flow-bell-mac
 脚本将编译 release 版本、生成图标，并输出：
 - `dist/Flow Bell.app`
 - `dist/Install Flow Bell.command` — 双击即可安装到 `/Applications`
-- `dist/Flow Bell.zip`
+- `dist/Flow.Bell.zip`
 
 ---
 

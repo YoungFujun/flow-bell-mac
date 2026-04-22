@@ -8,8 +8,8 @@ final class RestOverlayController {
     private var miniPanel: NSPanel?
     private var isMinimized = false
 
-    private static let panelWidth: CGFloat = 320
-    private static let panelHeight: CGFloat = 220
+    private static let panelWidth: CGFloat = 360
+    private static let panelHeight: CGFloat = 284
     private static let miniPanelWidth: CGFloat = 160
     private static let miniPanelHeight: CGFloat = 56
 
@@ -160,76 +160,76 @@ struct RestOverlayView: View {
     @ObservedObject var model: RestOverlayModel
 
     var body: some View {
-        VStack(spacing: 20) {
-            // 关闭按钮保持在右上角
-            HStack {
-                Spacer()
-                Button(action: { model.onClose?() }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundStyle(Color.white.opacity(0.5))
-                }
-                .buttonStyle(.plain)
+        ZStack(alignment: .topTrailing) {
+            Button(action: { model.onClose?() }) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 16))
+                    .foregroundStyle(Color.white.opacity(0.5))
             }
+            .buttonStyle(.plain)
+            .padding(.top, 18)
+            .padding(.trailing, 18)
 
-            VStack(spacing: 8) {
-                Image(systemName: "moon.zzz.fill")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(Color.white.opacity(0.72))
+            VStack(spacing: 16) {
+                VStack(spacing: 8) {
+                    Image(systemName: "moon.zzz.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(Color.white.opacity(0.72))
 
-                Text(L10n.restAWhile)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(Color.white.opacity(0.72))
+                    Text(L10n.restAWhile)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(Color.white.opacity(0.72))
+                }
+
+                Text(model.timeText)
+                    .font(.system(size: 64, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.white)
+
+                Text(L10n.stepAwayFromScreen)
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.white.opacity(0.55))
+
+                HStack(spacing: 8) {
+                    Button(L10n.minimize) {
+                        model.onMinimize?()
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color.white.opacity(0.6))
+                    .frame(width: 72)
+                    .padding(.vertical, 6)
+                    .background(Color.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
+
+                    Button(L10n.endRest) {
+                        model.onSkip?()
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color.white.opacity(0.6))
+                    .frame(width: 72)
+                    .padding(.vertical, 6)
+                    .background(Color.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
+
+                    Button(L10n.nextFocus) {
+                        model.onNextFocus?()
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color.white.opacity(0.6))
+                    .frame(width: 72)
+                    .padding(.vertical, 6)
+                    .background(Color.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
+                }
             }
-
-            Text(model.timeText)
-                .font(.system(size: 64, weight: .semibold, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(.white)
-
-            Text(L10n.stepAwayFromScreen)
-                .font(.system(size: 13))
-                .foregroundStyle(Color.white.opacity(0.55))
-
-            HStack(spacing: 8) {
-                Button(L10n.minimize) {
-                    model.onMinimize?()
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Color.white.opacity(0.6))
-                .frame(width: 72)
-                .padding(.vertical, 6)
-                .background(Color.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
-
-                Button(L10n.endRest) {
-                    model.onSkip?()
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Color.white.opacity(0.6))
-                .frame(width: 72)
-                .padding(.vertical, 6)
-                .background(Color.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
-
-                Button(L10n.nextFocus) {
-                    model.onNextFocus?()
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Color.white.opacity(0.6))
-                .frame(width: 72)
-                .padding(.vertical, 6)
-                .background(Color.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
-            }
+            .padding(.horizontal, 28)
+            .padding(.vertical, 26)
         }
-        .padding(24)
-        .frame(width: 320, height: 220)
+        .frame(width: 360, height: 284)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(Color.black.opacity(0.88))
         )
-        .padding(8)
     }
 }
 
